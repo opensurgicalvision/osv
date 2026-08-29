@@ -1,0 +1,17 @@
+{
+  "_comment": "Canonical allowlist of Claude model IDs approved for OSV agents. Enforced by .ai/build.py --check: every agent frontmatter `model:` field must be a key here. This exists because a floating tier alias (sonnet, haiku, latest) means Anthropic shipping a new model silently changes the behavior of a security gate with no PR, no diff, no review -- see R-22 in .ai/rules.md. Bumping an entry, or approving a new one, requires a reviewed PR against this file.",
+  "approved_models": {
+    "claude-sonnet-5": {
+      "tier": "sonnet",
+      "approved_by": "R1",
+      "approved_date": "2026-08-29",
+      "used_by": ["deid-gate", "pr-triage", "bias-watchdog", "repro-nightly", "content-drafter"]
+    },
+    "claude-haiku-4-5-20251001": {
+      "tier": "haiku",
+      "approved_by": "R1",
+      "approved_date": "2026-08-29",
+      "used_by": ["newcomer-greeter", "dataset-scout", "literature-digest", "cfp-scout"]
+    }
+  }
+}

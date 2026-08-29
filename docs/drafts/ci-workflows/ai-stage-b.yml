@@ -1,0 +1,99 @@
+name: AI Agent Review (Stage B)
+
+on:
+  workflow_run:
+    workflows: ["De-identification Scan", "PR Triage & Slop Filter"]
+    types: [completed]
+
+# This job runs in the BASE repo's context with secrets available -- but it
+# never checks out the PR head (no `ref:` below defaults to this repo's own
+# default branch, i.e. trusted code only). Everything about the PR that the
+# agent needs comes from the Stage A artifact or, at agent runtime, through
+# the read-only osv-github-ro MCP tool. See
+# docs/open-source-project-plan.md Sec. 5.11 and .ai/rules.md R-11.
+permissions:
+  contents: read
+  actions: read # required to download an artifact from a different workflow run
+  pull-requests: write
+
+jobs:
+  run-agent:
+    runs-on: ubuntu-latest
+    if: contains(fromJson('["success","failure"]'), github.event.workflow_run.conclusion)
+    steps:
+      - name: Checkout base repo (Dockerfile + MCP server code -- NOT the PR head)
+        uses: actions/checkout@v4
+        # No `ref:` here on purpose -- this checks out the default branch.
+        # The PR's own content is never checked out in this job.
+
+      - name: Determine which agent to run
+        id: agent
+        run: |
+          case "${{ github.event.workflow_run.name }}" in
+            "De-identification Scan") echo "name=deid-gate" >> "$GITHUB_OUTPUT" ;;
+            "PR Triage & Slop Filter") echo "name=pr-triage" >> "$GITHUB_OUTPUT" ;;
+            *)
+              echo "Unrecognized triggering workflow: ${{ github.event.workflow_run.name }}"
+              exit 1
+              ;;
+          esac
+
+      - name: Download Stage A artifact
+        uses: actions/download-artifact@v4
+        with:
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: stage-a-artifact
+          pattern: "*"
+
+      - name: Extract PR number
+        id: pr
+        run: |
+          NUM=$(find stage-a-artifact -name pr_number.txt -exec cat {} \; | head -1)
+          if [ -z "$NUM" ]; then
+            echo "No pr_number.txt found in the Stage A artifact"
+            exit 1
+          fi
+          echo "number=$NUM" >> "$GITHUB_OUTPUT"
+
+      - name: Build agent runner image
+        run: docker build -t osv-agent-runner -f docker/agent-runner/Dockerfile .
+
+      - name: Run agent in a read-only container
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          docker run --rm \
+            --read-only --tmpfs /tmp:rw,size=256m \
+            -v "$PWD:/workspace:ro" -w /workspace \
+            -e ANTHROPIC_API_KEY -e GITHUB_TOKEN \
+            osv-agent-runner \
+            claude -p "You are the '${{ steps.agent.outputs.name }}' subagent defined in \
+              .claude/agents/${{ steps.agent.outputs.name }}.md for repository \
+              ${{ github.repository }}, pull request #${{ steps.pr.outputs.number }}. \
+              The Stage A artifact is available under ./stage-a-artifact/. Follow that \
+              agent definition exactly, including its Hard Boundaries section."
+
+# NOTE (read before relying on this in production):
+# 1. The exact `claude` CLI flags for non-interactive/headless operation, and
+#    whether an explicit "run this named subagent" flag exists in your
+#    installed Claude Code CLI version, were not verified against a live
+#    installation in this environment (no network access here). This prompt
+#    relies on Claude Code's own automatic subagent delegation -- each
+#    agent's `description:` field in .ai/agents/*.md says
+#    "Use PROACTIVELY when..." specifically so the model picks the right
+#    subagent on its own. Check `claude --help` / current docs against
+#    whatever CLI version docker/agent-runner/Dockerfile installs, and add an
+#    explicit agent-selection flag here if one exists and is more reliable.
+# 2. `--read-only` on the docker run is the actual security property this
+#    workflow adds beyond the tool-level restrictions in .ai/agents/*.md
+#    (no Bash, MCP-only GitHub access, label allowlist) -- it does NOT
+#    restrict network access, since the agent needs egress to the Anthropic
+#    API and the MCP servers need it for the GitHub API.
+# 3. This file and docs/drafts/ci-workflows/deid-scan.yml are staged here
+#    rather than under .github/workflows/ because .ai/hooks/phi_path_guard.py
+#    (R-04) blocks an agent from writing directly into .github/workflows/ --
+#    correctly, since CI workflow files are exactly the kind of file where an
+#    agent acting on a bad instruction could do real damage. A human moves
+#    these into .github/workflows/ after reviewing them.

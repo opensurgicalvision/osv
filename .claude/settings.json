@@ -1,0 +1,215 @@
+{
+  "mcpServers": {
+    "github": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-github"
+      ],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}"
+      }
+    },
+    "huggingface": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-huggingface"
+      ],
+      "env": {
+        "HF_TOKEN": "${HF_TOKEN}"
+      }
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "."
+      ]
+    },
+    "arxiv-pubmed": {
+      "command": "uv",
+      "args": [
+        "run",
+        "mcp-server-scholar"
+      ]
+    },
+    "zotero": {
+      "command": "uv",
+      "args": [
+        "run",
+        "mcp-server-zotero"
+      ]
+    },
+    "osv-annotation": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--directory",
+        "mcp-servers/osv-annotation",
+        "osv_annotation_mcp.py"
+      ]
+    },
+    "osv-experiments": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--directory",
+        "mcp-servers/osv-experiments",
+        "osv_experiments_mcp.py"
+      ]
+    },
+    "osv-datasets": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--directory",
+        "mcp-servers/osv-datasets",
+        "osv_datasets_mcp.py"
+      ]
+    },
+    "osv-dicom": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--directory",
+        "mcp-servers/osv-dicom",
+        "osv_dicom_mcp.py"
+      ]
+    },
+    "osv-leaderboard": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--directory",
+        "mcp-servers/osv-leaderboard",
+        "osv_leaderboard_mcp.py"
+      ]
+    },
+    "osv-cfp": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--directory",
+        "mcp-servers/osv-cfp",
+        "osv_cfp_mcp.py"
+      ]
+    },
+    "osv-github-ro": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--directory",
+        "mcp-servers/osv-github-ro",
+        "osv_github_ro_mcp.py"
+      ],
+      "env": {
+        "GITHUB_TOKEN": "${GITHUB_TOKEN}"
+      }
+    },
+    "osv-github-triage": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--directory",
+        "mcp-servers/osv-github-triage",
+        "osv_github_triage_mcp.py"
+      ],
+      "env": {
+        "GITHUB_TOKEN": "${GITHUB_TOKEN}"
+      }
+    }
+  },
+  "autoApprove": [
+    "osv-datasets",
+    "osv-experiments",
+    "osv-leaderboard",
+    "osv-cfp",
+    "osv-github-ro"
+  ],
+  "permissions": {
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./**/*.pem)",
+      "Read(./**/secrets/**)",
+      "Read(./data/raw/**)",
+      "Write(./data/raw/**)",
+      "Write(./LICENSE*)",
+      "Write(./docs/clinical-disclaimer.md)",
+      "Write(./.github/workflows/**)",
+      "Bash(git commit:*--no-verify*)",
+      "Bash(git push:*--force*)",
+      "Bash(curl:*)",
+      "Bash(wget:*)"
+    ],
+    "ask": [
+      "Bash(dvc push:*)",
+      "Bash(git push:*)",
+      "Bash(gh pr merge:*)",
+      "Bash(hf upload:*)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python .claude/hooks/phi_path_guard.py"
+          }
+        ],
+        "matcher": "Write|Edit|NotebookEdit"
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python .claude/hooks/bash_guard.py"
+          }
+        ],
+        "matcher": "Bash"
+      }
+    ],
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python .claude/hooks/python_format.py"
+          }
+        ],
+        "matcher": "Write|Edit"
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python .claude/hooks/notebook_guard.py"
+          }
+        ],
+        "matcher": "Write|Edit|NotebookEdit"
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python .claude/hooks/disclaimer_guard.py"
+          }
+        ],
+        "matcher": "Write|Edit"
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python .claude/hooks/session_start.py"
+          }
+        ]
+      }
+    ]
+  }
+}

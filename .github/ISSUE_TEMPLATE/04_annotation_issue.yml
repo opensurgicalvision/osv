@@ -1,0 +1,19 @@
+name: Disputed Annotation / Clinical Query
+description: Flag an ambiguous anatomical boundary, contested mask, or label inconsistency.
+title: "[CLINICAL]: "
+labels: ["needs-clinician"]
+body:
+  - type: input
+    id: sample_id
+    attributes:
+      label: Dataset & Frame / Video ID
+      placeholder: e.g. CholecSeg8k / video01 / frame_00124
+    validations:
+      required: true
+  - type: textarea
+    id: dispute_desc
+    attributes:
+      label: Anatomical Dispute Details
+      description: Describe the boundary ambiguity or anatomical question for Clinical Lead (RC) review.
+    validations:
+      required: true

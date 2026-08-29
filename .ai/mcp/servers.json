@@ -1,0 +1,68 @@
+{
+  "mcpServers": {
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}"
+      }
+    },
+    "huggingface": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-huggingface"],
+      "env": {
+        "HF_TOKEN": "${HF_TOKEN}"
+      }
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "."]
+    },
+    "arxiv-pubmed": {
+      "command": "uv",
+      "args": ["run", "mcp-server-scholar"]
+    },
+    "zotero": {
+      "command": "uv",
+      "args": ["run", "mcp-server-zotero"]
+    },
+    "osv-annotation": {
+      "command": "uv",
+      "args": ["run", "--directory", "mcp-servers/osv-annotation", "osv_annotation_mcp.py"]
+    },
+    "osv-experiments": {
+      "command": "uv",
+      "args": ["run", "--directory", "mcp-servers/osv-experiments", "osv_experiments_mcp.py"]
+    },
+    "osv-datasets": {
+      "command": "uv",
+      "args": ["run", "--directory", "mcp-servers/osv-datasets", "osv_datasets_mcp.py"]
+    },
+    "osv-dicom": {
+      "command": "uv",
+      "args": ["run", "--directory", "mcp-servers/osv-dicom", "osv_dicom_mcp.py"]
+    },
+    "osv-leaderboard": {
+      "command": "uv",
+      "args": ["run", "--directory", "mcp-servers/osv-leaderboard", "osv_leaderboard_mcp.py"]
+    },
+    "osv-cfp": {
+      "command": "uv",
+      "args": ["run", "--directory", "mcp-servers/osv-cfp", "osv_cfp_mcp.py"]
+    },
+    "osv-github-ro": {
+      "command": "uv",
+      "args": ["run", "--directory", "mcp-servers/osv-github-ro", "osv_github_ro_mcp.py"],
+      "env": {
+        "GITHUB_TOKEN": "${GITHUB_TOKEN}"
+      }
+    },
+    "osv-github-triage": {
+      "command": "uv",
+      "args": ["run", "--directory", "mcp-servers/osv-github-triage", "osv_github_triage_mcp.py"],
+      "env": {
+        "GITHUB_TOKEN": "${GITHUB_TOKEN}"
+      }
+    }
+  }
+}

@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Community Discussions & Questions
+    url: https://git.epam.com/aleksandr_stefanin/open-surgical-vision/-/issues
+    about: Ask questions, share ideas, and discuss surgical AI research.
+  - name: Security & PHI Vulnerability Report
+    url: mailto:security@opensurgicalvision.org
+    about: Privately report security issues or accidental PHI leakage.

@@ -1,0 +1,35 @@
+name: Feature Request
+description: Propose a new feature, baseline architecture, or augmentation method.
+title: "[FEAT]: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Motivation & Problem
+      description: Is your feature request related to a specific problem or research bottleneck?
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: Describe the solution you would like to see implemented.
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Component Area
+      options:
+        - datasets
+        - deid
+        - annotate
+        - augment
+        - models
+        - train
+        - eval
+        - deploy / edge latency
+        - ai-tooling / mcp
+    validations:
+      required: true

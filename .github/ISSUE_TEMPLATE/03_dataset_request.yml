@@ -1,0 +1,27 @@
+name: Dataset Request
+description: Propose adding a new public surgical video or medical imaging dataset.
+title: "[DATASET]: "
+labels: ["dataset", "needs-legal-audit"]
+body:
+  - type: input
+    id: dataset_name
+    attributes:
+      label: Dataset Name & Paper Link
+      placeholder: e.g., Dresden Surgical Anatomy Dataset (DSAD) - https://...
+    validations:
+      required: true
+  - type: input
+    id: license
+    attributes:
+      label: Dataset License
+      description: CC BY, CC BY-NC-SA, PhysioNet, custom registration required?
+      placeholder: e.g., CC BY-NC 4.0
+    validations:
+      required: true
+  - type: textarea
+    id: clinical_domain
+    attributes:
+      label: Clinical Domain & Modality
+      description: Laparoscopy, Endoscopy, CT, MRI? What procedures and anatomical structures?
+    validations:
+      required: true

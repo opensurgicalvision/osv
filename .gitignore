@@ -1,0 +1,51 @@
+# Secrets -- never commit real values. See docs/drafts/dotenv-template.txt
+# for what belongs in .env and how to obtain each key. .env.example (the
+# same template with empty values) IS meant to be committed.
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+
+# Coverage / test artifacts
+.coverage
+.coverage.*
+htmlcov/
+
+# DVC -- data itself is versioned via DVC, not git (R-01 in .ai/rules.md).
+# Raw data must never reach git regardless of this file; this just keeps
+# DVC's own local cache/tmp out of version control.
+/data/raw/
+.dvc/cache/
+.dvc/tmp/
+
+# MLflow / experiment tracking local artifacts
+mlruns/
+mlartifacts/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+.idea/
+
+# Docs build output
+site/
+docs/text-for-presentation.txt
+docs/for-notebooklm.txt
+

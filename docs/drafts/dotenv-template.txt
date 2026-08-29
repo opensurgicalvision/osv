@@ -1,0 +1,141 @@
+# OpenSurgicalVision (OSV) — local environment variables
+#
+# This is a template for TWO files you should create at the repo root:
+#   .env.example  — commit this one. Same content, no real values ever.
+#   .env          — your real local secrets. Never commit this one.
+#
+# From the repo root:
+#   cp docs/drafts/dotenv-template.txt .env.example
+#   cp docs/drafts/dotenv-template.txt .env
+#   # then edit .env and fill in real values
+#
+# Why this file lives here instead of directly at .env / .env.example:
+# this project's own .claude/settings.json declares
+#   "permissions": { "deny": ["Read(./.env)", "Read(./.env.*)", ...] }
+# specifically so no Claude Code session can read or write a file matching
+# .env / .env.* -- the harness enforced that against the Write tool too when
+# this file was being prepared, exactly as intended. Copying a plain .txt
+# into place is a normal file operation for you as a human; it is not
+# something this agent session can do to itself.
+#
+# ---------------------------------------------------------------------------
+# Scope
+# ---------------------------------------------------------------------------
+# These variables are for LOCAL DEVELOPMENT ONLY -- running MCP servers or
+# the `claude` CLI on your own machine (picked up via `${VAR}` substitution
+# in .ai/mcp/servers.json / .claude/mcp/servers.json, and via
+# `os.environ[...]` in mcp-servers/*/osv_*_mcp.py).
+#
+# CI (.github/workflows/*.yml) does NOT read this file at all -- it uses
+# GitHub Actions repository secrets instead: repo -> Settings -> Secrets and
+# variables -> Actions -> "New repository secret". Set GITHUB_TOKEN and
+# ANTHROPIC_API_KEY there for Stage B (.github/workflows/ai-stage-b.yml) to
+# work in CI; this file has no effect on that.
+#
+# R-12 (.ai/rules.md): secrets are never printed, echoed, or logged. Once you
+# put a real value in .env, the deny rule above means no Claude Code session
+# in this project can read it back into its context -- that is intentional.
+
+# ---------------------------------------------------------------------------
+# GITHUB_TOKEN
+# ---------------------------------------------------------------------------
+# What it's for:
+#   - The official "github" MCP server (.ai/mcp/servers.json) for issues/PRs.
+#   - osv-github-ro and osv-github-triage, the two read-only/narrow-write MCP
+#     servers this project wrote itself (mcp-servers/osv-github-ro/,
+#     mcp-servers/osv-github-triage/) -- used by the deid-gate and pr-triage
+#     agents to read PR content and post comments/labels without a shell.
+#
+# How to get one:
+#   1. https://github.com/settings/personal-access-tokens/new
+#      (fine-grained token -- prefer this over a classic PAT)
+#   2. Resource owner: your account or the OSV org, once it exists.
+#   3. Repository access: "Only select repositories" -> this repo.
+#   4. Permissions needed:
+#        - Pull requests: Read and write
+#        - Issues:        Read and write
+#        - Metadata:      Read-only (required automatically)
+#      Do NOT grant Contents: Write or Administration -- nothing in this
+#      project's own tooling needs it, and R-10 (.ai/rules.md) says no agent
+#      merges to main, so a token that even *could* do that is over-scoped.
+#   5. Set an expiration and put the token below.
+#
+# Classic-token alternative: https://github.com/settings/tokens/new with the
+# `repo` scope, if fine-grained tokens aren't available in your org yet.
+GITHUB_TOKEN=
+
+# ---------------------------------------------------------------------------
+# HF_TOKEN
+# ---------------------------------------------------------------------------
+# What it's for:
+#   - The official "huggingface" MCP server (.ai/mcp/servers.json) -- datasets,
+#     models, and Spaces (per the plan, Sec. 9/10: HF Datasets is the default
+#     storage backend for public datasets in this project).
+#
+# How to get one:
+#   1. https://huggingface.co/settings/tokens
+#   2. "Create new token" -> type "Read" for browsing/downloading datasets,
+#      or "Write" if you'll also push datasets/models/Spaces from your machine.
+#   3. Paste it below.
+HF_TOKEN=
+
+# ---------------------------------------------------------------------------
+# ANTHROPIC_API_KEY
+# ---------------------------------------------------------------------------
+# What it's for:
+#   - Running the `claude` CLI / Claude Agent SDK locally against the
+#     Anthropic API directly (as opposed to a Claude.ai subscription login).
+#   - The same variable name is what .github/workflows/ai-stage-b.yml expects
+#     in CI, but there it comes from a GitHub Actions secret, not this file.
+#
+# How to get one:
+#   1. https://console.anthropic.com/settings/keys
+#   2. "Create Key", name it (e.g. "osv-local-dev"), copy it immediately --
+#      the full key is only shown once.
+#
+# Note: if you normally use Claude Code via `claude login` (Claude Pro / Max
+# / Team subscription) rather than API billing, you may not need this at all
+# for interactive local use -- it mainly matters for running the CLI
+# non-interactively, for the MCP servers' own test scripts, or for anything
+# that calls the Anthropic API directly rather than through an already
+# logged-in `claude` session.
+ANTHROPIC_API_KEY=
+
+# ---------------------------------------------------------------------------
+# OSV_ALLOW_PROTECTED_EDIT (optional -- not a secret, not an external key)
+# ---------------------------------------------------------------------------
+# A local escape hatch read by .ai/hooks/phi_path_guard.py (R-04 in
+# .ai/rules.md): it lets ONE specific protected path (LICENSE*, the clinical
+# disclaimer, .ai/context.md, .ai/rules.md, .github/workflows/**) be edited
+# by an agent session in this one case. Leave it unset -- the hook is
+# supposed to say no by default. Only set it, for a single command, when you
+# (a human) have already decided a specific protected file should change and
+# want to let the agent make that one edit. Set it to the exact repo-relative
+# posix path being edited, e.g.:
+#   OSV_ALLOW_PROTECTED_EDIT=.ai/rules.md
+# Do not leave this set in your normal shell environment or in a real .env
+# you load automatically -- it defeats R-04 for as long as it's set.
+# OSV_ALLOW_PROTECTED_EDIT=
+
+# ---------------------------------------------------------------------------
+# Planned, not yet wired to any code (Phase 0/1 -- see docs/open-source-project-plan.md)
+# ---------------------------------------------------------------------------
+# Nothing in this repo reads these yet. Listed here so this file stays the
+# one place that tracks "what secrets will this project eventually need,"
+# rather than scattering credential handling ad hoc later.
+#
+# DVC remote credentials, if a private remote (S3/Azure) is ever added
+# alongside the default public Hugging Face Datasets backend:
+#   AWS_ACCESS_KEY_ID=
+#   AWS_SECRET_ACCESS_KEY=
+#   AZURE_STORAGE_CONNECTION_STRING=
+#
+# MLflow / Weights & Biases experiment tracking (Sec. 9 of the plan):
+#   MLFLOW_TRACKING_URI=
+#   WANDB_API_KEY=
+#
+# The "arxiv-pubmed" and "zotero" MCP entries in .ai/mcp/servers.json
+# currently declare no required env var -- if the specific `mcp-server-scholar`
+# / `mcp-server-zotero` packages you install need one (e.g. a Zotero API key
+# from https://www.zotero.org/settings/keys), add it here and to that
+# server's `env` block in .ai/mcp/servers.json.

@@ -1,0 +1,90 @@
+name: De-identification Scan
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "osv/datasets/**"
+      - "osv/deid/**"
+      - "data/**"
+      - "dvc.yaml"
+      - "dvc.lock"
+
+# Deterministic, no-LLM job. No ANTHROPIC_API_KEY or any secret beyond the
+# ambient, read-only-on-forks GITHUB_TOKEN is referenced here -- that is what
+# makes it safe to run unmodified on a PR from any fork (R-09, R-11).
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  deid-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout PR head
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install package
+        run: pip install -e .
+
+      - name: Determine changed files in scope
+        id: changed
+        run: |
+          git fetch --no-tags --depth=1 origin ${{ github.event.pull_request.base.sha }}
+          git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} \
+            -- osv/datasets osv/deid data dvc.yaml dvc.lock > changed_files.txt
+          echo "count=$(wc -l < changed_files.txt)" >> "$GITHUB_OUTPUT"
+
+      - name: Run deterministic de-identification scan
+        id: scan
+        if: steps.changed.outputs.count != '0'
+        run: python -m osv.deid.scan $(cat changed_files.txt) --out deid-verdict.json
+
+      - name: Write empty pass verdict (no scoped files changed)
+        if: steps.changed.outputs.count == '0'
+        run: echo '{"overall":"pass","files_scanned":[],"layers":{},"violations_total":0}' > deid-verdict.json
+
+      - name: Save PR number for Stage B
+        if: always()
+        run: echo '${{ github.event.pull_request.number }}' > pr_number.txt
+
+      - name: Upload verdict + PR number for Stage B
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: deid-verdict-${{ github.event.pull_request.number }}
+          path: |
+            deid-verdict.json
+            pr_number.txt
+          retention-days: 14
+
+      - name: Set deid verdict label
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const verdict = JSON.parse(fs.readFileSync('deid-verdict.json', 'utf8'));
+            const setLabel = verdict.overall === 'pass' ? 'deid:pass' : 'deid:fail';
+            const clearLabel = verdict.overall === 'pass' ? 'deid:fail' : 'deid:pass';
+            try {
+              await github.rest.issues.removeLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.pull_request.number,
+                name: clearLabel,
+              });
+            } catch (e) {
+              // label may not have existed yet on this PR -- fine
+            }
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+              labels: [setLabel],
+            });
