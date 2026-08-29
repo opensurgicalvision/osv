@@ -58,6 +58,7 @@ ALLOWED_HOSTS = (
     "huggingface.co", "cdn-lfs.huggingface.co",
     "arxiv.org", "export.arxiv.org", "eutils.ncbi.nlm.nih.gov", "pubmed.ncbi.nlm.nih.gov",
     "pypi.org", "files.pythonhosted.org",
+    "git.epam.com",  # the project's actual git remote, added 2026-08-29
     "localhost", "127.0.0.1",
 )
 
