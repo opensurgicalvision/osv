@@ -1,0 +1,63 @@
+# APPROVED manifest (R-23: data-butler executes only against a reviewed manifest with a
+# verified checksum). Drafted by AI research (WebSearch + WebFetch against huggingface.co,
+# both R-07-allowlisted); checksum not yet independently verified by an actual download —
+# data-butler's own download-time sha256 check is the real verification and must fail loudly
+# on any mismatch rather than trusting this value.
+#
+# Reviewed and approved by Aleksandr Stefanin (opensurgicalvision@proton.me) in chat, 2026-08-30,
+# including explicit acceptance of the CC BY-NC-SA 4.0 non-commercial clause below as the
+# license for this dataset's use in OSV.
+
+name: cholecseg8k
+status: APPROVED
+
+source:
+  type: huggingface
+  repo_id: minwoosun/CholecSeg8k
+  repo_type: dataset
+  revision: fbf8b94c674ea97e6adf9836e7f626f3ad3380ab  # pinned commit — immutable, re-check before use
+  url: https://huggingface.co/datasets/minwoosun/CholecSeg8k
+  files:
+    - path: data/CholecSeg8k.zip
+      # sha256 read from the file's git-lfs pointer (not an independently published checksum).
+      # WebFetch summarizes fetched content through a small model, so this hex string could in
+      # principle be mistransribed — data-butler's own download-time sha256 check is the real
+      # verification; treat this as a strong prior, spot-check before merge, not as gospel.
+      sha256: ab4cfa07122230255092624711924a5441fe8d61653918e4ba1b6d6c33a24c3b
+      size_bytes: 3104078070
+
+license:
+  name: CC BY-NC-SA 4.0
+  redistribution_allowed: true
+  commercial_use: false   # NonCommercial clause — OSV is described as "open-source"; accepted
+                           # explicitly by the project owner (see approval note above) as the
+                           # license for the flagship PoC dataset.
+  attribution_required: true
+  share_alike: true
+  citation:
+    - "Hong, W-Y. et al. (2020). CholecSeg8k: A Semantic Segmentation Dataset for Laparoscopic
+       Cholecystectomy Based on Cholec80. arXiv:2012.12453"
+  derived_from: >
+    Cholec80 (University of Strasbourg / IRCAD). CholecSeg8k's own CC BY-NC-SA 4.0 grant is what
+    this manifest relies on for redistribution; Cholec80's original research-use agreement terms
+    were not independently re-verified — accepted as a known open item at approval time, not a
+    blocker, since CholecSeg8k's redistribution license is what OSV is relying on here.
+  registration_required: false
+
+content:
+  description: >
+    8,080 pixel-annotated frames (854x480) from 17 laparoscopic cholecystectomy videos (subset
+    of Cholec80), 13 semantic classes, plus color/annotation/watershed mask variants per frame.
+  frame_count: 8080
+  source_video_count: 17
+  modality: 2D RGB frame + semantic segmentation mask
+
+patient_id_field:
+  strategy: folder_prefix
+  pattern: "videoNN"  # one folder-prefix per source Cholec80 video = one patient/operation (R-08)
+  note: >
+    Exact folder naming is confirmed only once data-butler unpacks the zip. If the real layout
+    doesn't match this pattern, that's a manifest bug for a human to fix, not a fallback to a
+    frame-level split (R-08 makes a frame-level split a critical bug, not an option).
+
+expected_file_count: 8080  # annotated source frames; mask variants add further files per frame
