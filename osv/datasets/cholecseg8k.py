@@ -67,6 +67,12 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Iterator, Mapping, Sequence
 
+import cv2
+import numpy as np
+from PIL import Image
+
+
+
 # ---------------------------------------------------------------------------
 # Categories — Table I, Hong et al. (2020), arXiv:2012.12453. Transcribed
 # verbatim from the published paper, not invented here.
@@ -93,12 +99,15 @@ ANNOTATIONS_BLOCKED_REASON = (
     "for CholecSeg8k's watershed/annotation masks from any allowlisted, "
     "deterministic source (archive contents, arXiv:2012.12453, the HF "
     "dataset card, or the HF loading script). Per the project's ban on an "
-    "AI agent defining anatomical classes, this converter refuses to guess "
-    "one. Supply `color_to_category` to `convert()` once a human has "
-    "sourced the authoritative mapping."
+    "AI agent defining anatomical classes (R-14 / Clinical Lead authority), "
+    "this converter refuses to guess one. Supply a verified `pixel_to_category` "
+    "or `color_to_category` mapping to `build_annotations()` / `convert()` "
+    "once a human / Clinical Lead has sourced and approved the authoritative mapping."
 )
 
+
 EXPECTED_VIDEO_COUNT = 17
+
 EXPECTED_FRAME_COUNT = 8080
 IMAGE_WIDTH = 854
 IMAGE_HEIGHT = 480
@@ -337,19 +346,106 @@ def build_images(
     return images
 
 
+def _load_mask_array(zf: zipfile.ZipFile | None, path: str) -> np.ndarray:
+    if zf is not None:
+        with zf.open(path) as fh:
+            with Image.open(io.BytesIO(fh.read())) as im:
+                return np.array(im)
+    with Image.open(path) as im:
+        return np.array(im)
+
+
 def build_annotations(
     records: Sequence[FrameRecord],
-    color_to_category: Mapping[tuple[int, int, int], int] | None,
+    images: Sequence[dict[str, Any]],
+    *,
+    pixel_to_category: Mapping[int, int] | None = None,
+    color_to_category: Mapping[tuple[int, int, int], int] | None = None,
+    zip_path: str | Path | None = None,
+    min_area: float = 4.0,
 ) -> list[dict[str, Any]]:
-    """Deliberately unimplemented without an explicit mapping. See the
-    module docstring's "KNOWN, DELIBERATE GAP" section.
+    """Generate COCO polygon annotations from segmentation masks.
+
+    Requires an explicit, human-verified `pixel_to_category` or `color_to_category`
+    mapping. Raises NotImplementedError if neither is supplied, adhering strictly
+    to R-14 (AI agents are forbidden from defining anatomical classes).
     """
-    if color_to_category is None:
+    if pixel_to_category is None and color_to_category is None:
         raise NotImplementedError(ANNOTATIONS_BLOCKED_REASON)
-    raise NotImplementedError(
-        "color_to_category was supplied, but RLE/polygon generation from it is "
-        "not yet implemented — wire it up once the mapping itself is verified."
-    )
+
+    annotations: list[dict[str, Any]] = []
+    ann_id = 1
+
+    image_id_by_path = {img["file_name"]: img["id"] for img in images}
+
+    zf = zipfile.ZipFile(zip_path) if zip_path is not None else None
+    try:
+        for record in sorted(records, key=lambda r: (r.video_id, r.clip_id, r.frame_id)):
+            img_id = image_id_by_path[record.image_path]
+
+            if pixel_to_category is not None:
+                mask_arr = _load_mask_array(zf, record.watershed_mask_path)
+                if len(mask_arr.shape) == 3 and mask_arr.shape[2] == 3:
+                    mask_2d = mask_arr[:, :, 0]
+                else:
+                    mask_2d = mask_arr
+
+                unique_vals = np.unique(mask_2d)
+                for pixel_val, cat_id in pixel_to_category.items():
+                    if pixel_val not in unique_vals:
+                        continue
+                    bin_mask = (mask_2d == pixel_val).astype(np.uint8)
+                    contours, _ = cv2.findContours(bin_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+                    for contour in contours:
+                        area = float(cv2.contourArea(contour))
+                        if area < min_area or len(contour) < 3:
+                            continue
+                        x, y, w, h = cv2.boundingRect(contour)
+                        poly = [float(coord) for pt in contour for coord in pt[0]]
+                        if len(poly) >= 6:
+                            annotations.append(
+                                {
+                                    "id": ann_id,
+                                    "image_id": img_id,
+                                    "category_id": cat_id,
+                                    "segmentation": [poly],
+                                    "area": area,
+                                    "bbox": [float(x), float(y), float(w), float(h)],
+                                    "iscrowd": 0,
+                                }
+                            )
+                            ann_id += 1
+            elif color_to_category is not None:
+                mask_arr = _load_mask_array(zf, record.color_mask_path)
+                for color_tuple, cat_id in color_to_category.items():
+                    bin_mask = np.all(mask_arr[:, :, :3] == color_tuple, axis=-1).astype(np.uint8)
+                    if not np.any(bin_mask):
+                        continue
+                    contours, _ = cv2.findContours(bin_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+                    for contour in contours:
+                        area = float(cv2.contourArea(contour))
+                        if area < min_area or len(contour) < 3:
+                            continue
+                        x, y, w, h = cv2.boundingRect(contour)
+                        poly = [float(coord) for pt in contour for coord in pt[0]]
+                        if len(poly) >= 6:
+                            annotations.append(
+                                {
+                                    "id": ann_id,
+                                    "image_id": img_id,
+                                    "category_id": cat_id,
+                                    "segmentation": [poly],
+                                    "area": area,
+                                    "bbox": [float(x), float(y), float(w), float(h)],
+                                    "iscrowd": 0,
+                                }
+                            )
+                            ann_id += 1
+    finally:
+        if zf is not None:
+            zf.close()
+
+    return annotations
 
 
 @dataclass
@@ -366,6 +462,7 @@ def convert(
     out_dir: str | Path,
     *,
     ratios: Mapping[str, float] | None = None,
+    pixel_to_category: Mapping[int, int] | None = None,
     color_to_category: Mapping[tuple[int, int, int], int] | None = None,
     verify_dimensions: bool = True,
 ) -> ConversionResult:
@@ -396,11 +493,17 @@ def convert(
         verify_dimensions=verify_dimensions,
     )
 
-    if color_to_category is None:
+    if pixel_to_category is None and color_to_category is None:
         annotations: list[dict[str, Any]] = []
         annotations_status = "blocked_pending_color_class_mapping"
     else:
-        annotations = build_annotations(records, color_to_category)
+        annotations = build_annotations(
+            records,
+            images,
+            pixel_to_category=pixel_to_category,
+            color_to_category=color_to_category,
+            zip_path=source if is_zip else None,
+        )
         annotations_status = "generated"
 
     instances = {
@@ -458,11 +561,15 @@ def main(argv: list[str] | None = None) -> int:
     if not args.source:
         parser.error("--source is required (or set the CHOLECSEG8K_RAW_ZIP environment variable)")
 
-    result = convert(args.source, args.out, verify_dimensions=not args.skip_dimension_check)
+    result = convert(
+        args.source,
+        args.out,
+        verify_dimensions=not args.skip_dimension_check,
+    )
 
     print(f"cholecseg8k convert: {len(result.instances['images'])} images, "
           f"{len(result.video_frame_counts)} videos, "
-          f"annotations={result.annotations_status}")
+          f"annotations={result.annotations_status} ({len(result.instances['annotations'])} objects)")
     print(f"split totals: {json.dumps(result.split_frame_totals)}")
     return 0
 
@@ -493,3 +600,5 @@ __all__ = [
     "convert",
     "main",
 ]
+
+

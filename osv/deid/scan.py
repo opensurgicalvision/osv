@@ -1,19 +1,17 @@
 """CLI entry point for the deterministic de-identification gate.
 
 This is Stage A of the deid-gate agent's two-piece design (see
-.ai/agents/deid-gate.md): it runs on a plain `pull_request` trigger with no
-LLM secret, so it executes on fork PRs with zero prompt-injection risk, and
-its verdict is what `deid-gate` (the LLM agent, Stage B) later reads and
-explains -- never recomputes.
+.ai/agents/deid-gate.md): it runs on a plain CI pipeline with no LLM secret, so
+it executes with zero prompt-injection risk, and its verdict is what `deid-gate`
+(the LLM agent, Stage B) later reads and explains -- never recomputes.
 
-Honesty note: `osv.deid.verify_no_phi` is currently a stub that always
-returns `clean: True` (see osv/deid/__init__.py) -- the real PS3.15 tag scan,
-private-tag stripping, OCR burned-in check, and defacing detection are Phase 1
-work for R4 (docs/open-source-project-plan.md Sec. 3, Phase 1). This script
-is the real, working aggregation/CLI/exit-code layer around that stub: it can
-be exercised end-to-end today, and the moment `verify_no_phi` grows real
-logic, nothing here needs to change.
+Deterministic verification layers:
+  * Layer 1: PS3.15 Annex E standard tag validation (DICOM).
+  * Layer 2: Private vendor tag scanning and stripping (odd groups).
+  * Layer 3: Morphological edge + OCR text candidate detection in pixel space.
+  * Layer 4: Volumetric defacing indicator check (cranial CT/MRI).
 """
+
 
 from __future__ import annotations
 

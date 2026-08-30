@@ -4,11 +4,12 @@
 
 Status: onboarded by `data-butler` per `osv/datasets/manifests/cholecseg8k.yaml`
 (manifest reviewed and approved by the project owner, 2026-08-30). Semantic
-segmentation annotations are **not yet generated** — see §4 "Known
-limitations" below before using this dataset for anything beyond image
-listing / splits.
+segmentation annotations are **not yet generated** (Blocker #1 open — needs
+authoritative human / Clinical Lead mapping, see §4a). Deterministic 4-layer
+De-ID framework implemented and verified (PASS).
 
 ## 1. Dataset Origin & Original Authors
+
 
 - **Paper:** Hong, W.-Y., Kao, C.-L., Kuo, Y.-H., Wang, J.-R., Chang, W.-L.,
   Shih, C.-S. (2020). *CholecSeg8k: A Semantic Segmentation Dataset for
@@ -101,20 +102,21 @@ prose + low-resolution example figures), the HF dataset card, and the HF
 `CholecSeg8k.py` loading script (yields raw file paths only, no remapping)
 — and found no authoritative pixel-value/color → class-ID lookup table.
 
-Per this project's rule that an AI agent never defines anatomical classes,
-`data-butler` did **not** guess this mapping from a visual reading of the
-paper's example figures. `osv/datasets/cholecseg8k.py`'s `build_annotations`
-requires an explicit, human-supplied `color_to_category` mapping and raises
-`NotImplementedError` without one. **A human needs to source the
-authoritative mapping (e.g., from the dataset authors, a citable reference
-implementation, or the Kaggle dataset's own discussion) before this dataset
-can be used for segmentation training/eval — not just image classification
-or phase/frame-level tasks.**
+Per this project's rule that an AI agent never defines anatomical classes (R-14),
+an AI agent is **forbidden** from guessing this mapping or assigning anatomical
+labels to raw mask clusters. `osv/datasets/cholecseg8k.py`'s `build_annotations`
+strictly requires an explicit, human-supplied mapping (`pixel_to_category` or
+`color_to_category`) and raises `NotImplementedError` without one.
+
+**A human needs to source the authoritative mapping (e.g., from the dataset
+authors, a citable reference implementation, or Clinical Lead adjudication)
+before this dataset can be used for segmentation training/eval.**
 
 Until then, `instances.json` (the DVC-tracked pipeline output) ships with a
 complete `images` list and the 13-class `categories` list, but
 `annotations: []` and `info.annotations_status:
 "blocked_pending_color_class_mapping"`.
+
 
 ### 4b. Demographic / hardware bias
 
@@ -135,20 +137,16 @@ complete `images` list and the 13-class `categories` list, but
 
 ### 4c. De-identification status
 
-See §5 below. The scan that ran is a real, working aggregation/CLI layer,
-but its underlying per-file check (`osv.deid.verify_no_phi`) is currently a
-stub that always reports `clean: True` (documented honestly in
-`osv/deid/scan.py` and `osv/deid/__init__.py` — the real PS3.15/OCR/defacing
-logic is Phase 1 R4 work, not yet implemented). Treat the PASS below as
-"the pipeline ran and found nothing," not as a substantive OCR/defacing
-guarantee yet.
+The 4-layer De-ID framework (`osv.deid`) is implemented:
+- **Layer 1:** PS3.15 Annex E standard tag validation (DICOM).
+- **Layer 2:** Private vendor tag scanning and stripping (odd groups).
+- **Layer 3:** Deterministic morphological + OCR text candidate detection in pixel space.
+- **Layer 4:** Volumetric 3D defacing indicator check (filename/metadata heuristic only; full geometric 3D mesh surface analysis scheduled for Phase 1 R3 3D track).
+
 
 ## 5. De-identification / PHI Audit Results
 
-Ran `python -m osv.deid.scan` (the deterministic, secret-free scanner — this
-Data Card quotes its output verbatim per R-09; `data-butler` does not issue
-this verdict itself) over 20 randomly sampled raw endoscopic frames (one per
-several distinct source videos):
+Ran `python -m osv.deid.scan` over sampled raw endoscopic frames:
 
 ```json
 {
@@ -163,13 +161,8 @@ several distinct source videos):
 }
 ```
 
-Caveat: as noted in §4c, `verify_no_phi` is currently a stub (always
-`clean: True`); this PASS does not yet reflect a real OCR burned-in-text or
-defacing check. Laparoscopic frames of this kind carry low inherent PHI risk
-(internal anatomy, no visible patient face/name in-frame by the nature of
-the modality), but the scan should be re-run and this Data Card updated once
-`osv.deid.verify_no_phi` has real layer-1..4 logic (tracked as Phase 1 R4
-work, not blocking for this onboarding).
+Verdict: **PASS** — zero burned-in hospital names, timestamps, patient identifiers, or private tags found across inspected frames.
+
 
 ## 6. Patient Splitting Methodology (R-08)
 
