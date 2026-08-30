@@ -2,6 +2,8 @@
 
 from typing import Any, Dict, List, Optional
 
+from osv.datasets import cholecseg8k
+
 
 def load(dataset_name: str, split: str = "train", **kwargs: Any) -> Dict[str, Any]:
     """Unified API entry point to load open surgical datasets.
@@ -22,4 +24,4 @@ def load(dataset_name: str, split: str = "train", **kwargs: Any) -> Dict[str, An
     }
 
 
-__all__ = ["load"]
+__all__ = ["load", "cholecseg8k"]

@@ -1,0 +1,58 @@
+{
+  "dataset": "cholecseg8k",
+  "patient_id_field": {
+    "strategy": "folder_prefix",
+    "pattern": "videoNN",
+    "note": "R-08 split key is the source Cholec80 video/operation, never a frame."
+  },
+  "algorithm": "osv.datasets.cholecseg8k.build_patient_split: deterministic largest-first bin-packing, videos visited in descending frame-count order (ties broken by ascending video_id), each assigned to whichever split is furthest below its target share of total frames. A whole video is always assigned atomically, so frame-level leakage across splits is structurally impossible, not merely tested for.",
+  "ratios": {
+    "train": 0.7,
+    "val": 0.15,
+    "test": 0.15
+  },
+  "video_frame_counts": {
+    "video01": 1280,
+    "video09": 240,
+    "video12": 640,
+    "video17": 320,
+    "video18": 160,
+    "video20": 160,
+    "video24": 960,
+    "video25": 320,
+    "video26": 320,
+    "video27": 400,
+    "video28": 560,
+    "video35": 240,
+    "video37": 480,
+    "video43": 720,
+    "video48": 240,
+    "video52": 800,
+    "video55": 240
+  },
+  "assignment": {
+    "video01": "train",
+    "video24": "val",
+    "video52": "test",
+    "video43": "train",
+    "video12": "train",
+    "video28": "train",
+    "video37": "train",
+    "video27": "train",
+    "video17": "test",
+    "video25": "train",
+    "video26": "train",
+    "video09": "val",
+    "video35": "train",
+    "video48": "train",
+    "video55": "train",
+    "video18": "test",
+    "video20": "train"
+  },
+  "split_frame_totals": {
+    "train": 5600,
+    "val": 1200,
+    "test": 1280
+  },
+  "generated_by": "osv.datasets.cholecseg8k.convert() against the manifest-declared, checksum-verified archive (sha256 ab4cfa07122230255092624711924a5441fe8d61653918e4ba1b6d6c33a24c3b), run 2026-08-30 by the data-butler onboarding agent."
+}

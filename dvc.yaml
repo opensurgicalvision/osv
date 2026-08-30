@@ -1,0 +1,16 @@
+stages:
+  cholecseg8k_convert:
+    # R-23: the raw archive is never staged inside the repo (never data/raw/,
+    # never committed) — it is downloaded per osv/datasets/manifests/cholecseg8k.yaml
+    # into a working directory outside git, checksum-verified there, and its
+    # local path passed in via the CHOLECSEG8K_RAW_ZIP environment variable at
+    # `dvc repro` time (read in Python by osv/datasets/cholecseg8k.py, not
+    # shell-expanded here, so this cmd is identical on any OS/shell). This
+    # keeps the pipeline definition reproducible and text-only while never
+    # requiring an agent session to write data bytes into the repository tree.
+    cmd: python -m osv.datasets.cholecseg8k --out data/processed/cholecseg8k
+    deps:
+      - osv/datasets/cholecseg8k.py
+      - osv/datasets/manifests/cholecseg8k.yaml
+    outs:
+      - data/processed/cholecseg8k

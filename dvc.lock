@@ -1,0 +1,19 @@
+schema: '2.0'
+stages:
+  cholecseg8k_convert:
+    cmd: python -m osv.datasets.cholecseg8k --out data/processed/cholecseg8k
+    deps:
+    - path: osv/datasets/cholecseg8k.py
+      hash: md5
+      md5: bab46b8828de654cffe907dde64c47c7
+      size: 18752
+    - path: osv/datasets/manifests/cholecseg8k.yaml
+      hash: md5
+      md5: d81b85c7f93273ab9c3bfd792c48a427
+      size: 3263
+    outs:
+    - path: data/processed/cholecseg8k
+      hash: md5
+      md5: 83435f2ee84ce81e25dbce6844748189.dir
+      size: 2172320
+      nfiles: 2
