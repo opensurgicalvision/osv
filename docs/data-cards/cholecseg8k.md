@@ -83,7 +83,7 @@ De-ID framework implemented and verified (PASS).
 
 ## 4. Known limitations — read before use
 
-### 4a. Segmentation annotations are not yet generated (open item, needs a human)
+### 4a. Segmentation annotations — generated, on a Clinical-Lead-approved mapping
 
 The paper's text claims the watershed mask encodes "the same class ID value
 ... for three color channels" (i.e., pixel value 0–12 = class ID directly).
@@ -108,14 +108,153 @@ labels to raw mask clusters. `osv/datasets/cholecseg8k.py`'s `build_annotations`
 strictly requires an explicit, human-supplied mapping (`pixel_to_category` or
 `color_to_category`) and raises `NotImplementedError` without one.
 
-**A human needs to source the authoritative mapping (e.g., from the dataset
-authors, a citable reference implementation, or Clinical Lead adjudication)
-before this dataset can be used for segmentation training/eval.**
+**That mapping has since been sourced and signed off** — see the two
+subsections below for the evidence and, importantly, the limits of the
+sign-off. `instances.json` (the DVC-tracked pipeline output) now ships
+`info.annotations_status: "generated"` with **95,928 polygon annotations**
+over all 8,080 frames:
 
-Until then, `instances.json` (the DVC-tracked pipeline output) ships with a
-complete `images` list and the 13-class `categories` list, but
-`annotations: []` and `info.annotations_status:
-"blocked_pending_color_class_mapping"`.
+| id | class | objects | frames |
+|---|---|---:|---:|
+| 0 | Black Background | 13,685 | 8,055 |
+| 1 | Abdominal Wall | 13,616 | 7,255 |
+| 2 | Liver | 21,285 | 8,080 |
+| 3 | Gastrointestinal Tract | 4,706 | 4,557 |
+| 4 | Fat | 15,018 | 7,510 |
+| 5 | Grasper | 8,562 | 6,020 |
+| 6 | Connective Tissue | 2,914 | 1,600 |
+| 7 | Blood | 2,696 | 692 |
+| 8 | Cystic Duct | 244 | 241 |
+| 9 | L-hook Electrocautery | 2,272 | 2,253 |
+| 10 | Gallbladder | 10,297 | 6,861 |
+| 11 | Hepatic Vein | 385 | 317 |
+| 12 | Liver Ligament | 248 | 240 |
+
+Two independent consistency signals in that table: Liver Ligament resolves to
+exactly the **240 frames** the exhaustive `ws=5` scan found, and Liver appears
+in 8,080 of 8,080 frames — which is what a cholecystectomy field should look
+like. No class is empty; no annotation has non-positive area, a degenerate
+bbox, or a polygon under 3 points.
+
+**Severe class imbalance — plan for it.** Liver carries 21,285 objects,
+Cystic Duct 244 and Hepatic Vein 385, i.e. roughly a 50:1 to 90:1 ratio.
+An unweighted loss will effectively ignore the rare classes. Report per-class
+metrics, never the macro average alone.
+
+#### ⚠️ Three classes are not benchmarkable on this split — read before quoting any number
+
+The rare classes are concentrated in single videos, and R-08 requires the
+split to cut by video. The two facts together produce this:
+
+| class | train | val | test | consequence |
+|---|---:|---:|---:|---|
+| Cystic Duct | 242 | 0 | **2** | test score computed on 2 objects — statistically meaningless |
+| Hepatic Vein | **385** | 0 | **0** | in training data only; **cannot be evaluated at all** |
+| Liver Ligament | **0** | 248 | **0** | never seen in training; **cannot be learned or tested** |
+
+This is not a bug in the split code — the split is a correct whole-video
+partition (train 12 / val 2 / test 3 videos). It is a property of the dataset
+meeting R-08. And for Liver Ligament it is **not fixable by re-splitting**:
+the class exists in exactly one video (`video09`), so no video-level
+partition can place it in train *and* val *and* test at once. Putting it in
+train would only move the hole, not close it.
+
+Consequences to respect:
+
+- Do **not** publish per-class IoU/Dice for Cystic Duct, Hepatic Vein or
+  Liver Ligament from this split. Mark them `N/A — insufficient split
+  coverage`, not `0.0`, and never fold them into a macro average, which would
+  silently drag the headline number.
+- A model trained here has **seen no Liver Ligament examples at all**. Any
+  prediction it makes for that class is out-of-distribution behaviour.
+- If those three classes matter for a research question, that needs either an
+  additional data source or a documented k-fold / leave-one-video-out
+  protocol over all 17 videos — a human decision, recorded in
+  `docs/BENCHMARK.md`, not a quiet change to this split (an already-published
+  split is frozen; changing it retroactively makes prior numbers
+  incomparable).
+
+#### Candidate mapping — mechanical evidence (established) 
+
+Two independent community implementations publish complementary halves of
+the encoding. Both were fetched and read directly (not taken second-hand):
+
+- `github.com/mhjd/cholecseg8k-deeplabv3` → `src/masks.py`: `LABEL_MAP`,
+  watershed grayscale value → class id, plus `IGNORE_INDEX = 255`.
+- `github.com/dataset-ninja/cholec-seg8k` → `src/convert.py`:
+  `class_to_color`, class name → RGB in `*_endo_color_mask.png`.
+
+Because these are two *independent* encodings of the same annotation, their
+mutual consistency is checkable mechanically, with no anatomical judgement
+involved. Cross-check performed on 12 frames drawn from 6 different videos
+(`scratchpad/crossval_mapping.py`): for each watershed value, the set of
+pixels carrying it was compared against the RGB at those same pixels.
+
+**Result: 13 of 13 classes co-locate at 100.0% purity.** Two corrections to
+the community tables were found in the process:
+
+| watershed | co-located RGB | class | note |
+|---|---|---|---|
+| 11 / 12 / 13 / 21 / 22 / 23 / 24 / 25 / 31 / 32 / 33 | as published | Abd. Wall, Fat, GI Tract, Liver, Gallbladder, Conn. Tissue, Blood, Cystic Duct, Grasper, L-hook, Hepatic Vein | exact match |
+| 50 | `(127,127,127)` | Black Background | **not `(0,0,0)`** — the archive uses `#7F7F7F` |
+| 5 | `(111,74,0)` | Liver Ligament | present in **video09 only**, 240 frames — see below |
+| 255 | `(255,255,255)` | — | watershed boundary, not a class (`IGNORE_INDEX`) |
+
+`ws = 5` was verified by an **exhaustive scan of all 8,080 masks**
+(`scratchpad/find_ligament.py`), not a sample: it occurs in 240 frames, all
+in `video09`, and all 240 co-locate with `(111,74,0)`. This confirms the
+community claim that the class is rare enough to miss in random sampling.
+
+What the above does **not** establish: that a given colour corresponds to a
+given *anatomical structure*. Pixel-to-pixel agreement between two encodings
+is a mechanical fact; "this region is the liver" is a clinical reading. That
+half is R-14 territory and is recorded below.
+
+#### Clinical Lead sign-off — SIGNED (scope-limited, see caveat)
+
+Review material prepared for adjudication (raw frame │ colour mask │ overlay):
+
+- `01_video01_frame_16638_endo.png` — 10 classes incl. Liver, Gallbladder,
+  Cystic Duct, Blood, Grasper
+- `02_video12_frame_19766_endo.png` — 10 classes incl. L-hook, Conn. Tissue
+- `03_video12_frame_19553_endo.png` — 10 classes incl. Hepatic Vein
+- `ws5_01_video09_frame_1031_endo.png` — the Liver Ligament candidate,
+  isolated and outlined (73,145 px)
+
+| Field | Value |
+|---|---|
+| Reviewer (name, role) | Egor Minsky — Clinical Lead (RC) |
+| Date of review | 2026-09-01 |
+| Frames reviewed | the four listed above (`01_`, `02_`, `03_`, `ws5_01_`) |
+| Verdict | Mapping confirmed correct ("да, всё верно") |
+| How recorded | Relayed by the project owner in the working session, not entered first-hand by the reviewer |
+
+**Scope caveat — this sign-off covers a narrow sample, and a reader should
+weight it accordingly.** The four frames were selected *by the agent*, on a
+convenience criterion (maximum distinct classes per frame), not by the
+reviewer and not at random. Concretely:
+
+- They span **3 of the 17 videos** (`video01`, `video12`, `video09`);
+  `02_` and `03_` are both from `video12`, ~213 frames apart — the same
+  operative phase, lighting and patient, so they are far less independent
+  than "three frames" suggests.
+- Ranking by class-density structurally favours clean, well-lit, richly
+  annotated frames and excludes the hard cases where a mapping error would
+  show most: smoke, blood wash, motion blur, small regions, tissue borders.
+- 11 of the 17 videos were never displayed at all.
+
+What the sign-off therefore establishes: the colour↔structure reading is
+correct **on legible, class-dense frames from three videos**. It is not a
+stratified, per-class, all-video audit. A wider adversarial sample (per-class
+frames from every video, including minimum-area and occluded instances)
+remains available to run if a stronger claim is ever needed — e.g. before
+publishing benchmark numbers that depend on rare-class accuracy.
+
+Combined with the mechanical 13/13 colour↔value cross-check above (which is
+exhaustive for `ws=5` and 100%-pure elsewhere), this is considered sufficient
+to unblock annotation generation. `build_annotations` still requires the
+mapping to be passed explicitly at the call site — the sign-off authorises a
+value, it does not turn the guard off.
 
 
 ### 4b. Demographic / hardware bias

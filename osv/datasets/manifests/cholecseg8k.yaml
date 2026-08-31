@@ -61,3 +61,42 @@ patient_id_field:
     frame-level split (R-08 makes a frame-level split a critical bug, not an option).
 
 expected_file_count: 8080  # annotated source frames; mask variants add further files per frame
+
+# ---------------------------------------------------------------------------
+# Class mapping (R-14). The archive publishes no pixel/colour -> class table;
+# the values below come from two independent community implementations whose
+# mutual consistency was verified mechanically (13/13 classes co-locate at
+# 100% purity; ws=5 checked exhaustively over all 8,080 masks), then read
+# anatomically by the Clinical Lead. Full evidence and the sign-off's scope
+# limits: docs/data-cards/cholecseg8k.md, section 4a.
+# ---------------------------------------------------------------------------
+class_mapping:
+  status: APPROVED
+  approved_by: "Egor Minsky — Clinical Lead (RC)"
+  approved_on: 2026-09-01
+  recorded_by: >
+    Relayed by the project owner in the working session, not entered first-hand
+    by the reviewer. Sign-off covers 4 agent-selected frames spanning 3 of 17
+    videos — see the scope caveat in the Data Card before relying on it for
+    rare-class claims.
+  sources:
+    - "github.com/mhjd/cholecseg8k-deeplabv3 -> src/masks.py (LABEL_MAP, IGNORE_INDEX=255)"
+    - "github.com/dataset-ninja/cholec-seg8k -> src/convert.py (class_to_color)"
+  corrections_found:
+    - "Black Background colour is (127,127,127), not (0,0,0) as dataset-ninja lists"
+    - "watershed value 255 is the watershed boundary, not a class"
+  watershed_to_category_id:   # *_endo_watershed_mask.png, channel 0
+    50: 0    # Black Background
+    11: 1    # Abdominal Wall
+    21: 2    # Liver
+    13: 3    # Gastrointestinal Tract
+    12: 4    # Fat
+    31: 5    # Grasper
+    23: 6    # Connective Tissue
+    24: 7    # Blood
+    25: 8    # Cystic Duct
+    32: 9    # L-hook Electrocautery
+    22: 10   # Gallbladder
+    33: 11   # Hepatic Vein
+    5: 12    # Liver Ligament (present in video09 only, 240 frames)
+  ignore_value: 255

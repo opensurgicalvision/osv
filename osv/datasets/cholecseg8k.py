@@ -28,31 +28,33 @@ skill):
   * emits a COCO-like `instances.json` skeleton: `images` + `categories`
     (the 13 published classes, Table I of the paper above) fully populated.
 
-KNOWN, DELIBERATE GAP — read before extending this module
------------------------------------------------------------
-`annotations` (the actual per-pixel segmentation) are intentionally **not**
-emitted by this converter yet. The archive's `*_endo_watershed_mask.png` /
-`*_endo_mask.png` files do *not* use the simple "pixel value == class ID
-0..12" encoding the paper's prose claims — empirically (see the onboarding
-MR discussion) the raw grayscale values observed are things like
-{0, 11, 12, 13, 21, 22, 23, 24, 25, 31, 32, 33, 50, 255, ...}, clustered in
-bands rather than 13 flat values, and neither the archive, the arXiv paper
-(no machine-readable table), the HF dataset card, nor the HF loading script
-(`CholecSeg8k.py`, which just yields raw file paths) publish a pixel-value
-(or `color_mask` RGB) -> class-ID lookup table.
+WHERE THE CLASS MAPPING COMES FROM — read before extending this module
+-----------------------------------------------------------------------
+The archive publishes no pixel-value -> class-ID table. Its
+`*_endo_watershed_mask.png` files do *not* use the "pixel value == class ID
+0..12" encoding the paper's prose claims; the real values are clustered
+({0, 5, 11, 12, 13, 21, 22, 23, 24, 25, 31, 32, 33, 50, 255}), and neither
+the arXiv paper, the HF dataset card, nor the HF loading script documents
+which value is which class.
 
-Inventing that table from a low-resolution reading of the paper's example
-figures would mean an AI agent silently deciding which pixels are "Liver"
-vs. "Gallbladder" vs. "Grasper" — squarely the "defining anatomical classes"
-line this project reserves for a human / the Clinical Lead (RC), not
-something to guess into a benchmark's ground truth. `build_annotations`
-below is therefore written to require an explicit, human-supplied
-`color_to_category` mapping and to refuse to run without one, rather than
-default to a guess.
+Guessing that table would mean an AI agent silently deciding which pixels
+are "Liver" vs. "Gallbladder" — the "defining anatomical classes" line this
+project reserves for the Clinical Lead (R-14). An earlier draft of this
+module did exactly that, labelled the result "Verified", and was reverted.
 
-Once a human sources the authoritative mapping (e.g. from the dataset
-authors, or a citable reference implementation), pass it to `convert()` and
-the `images`/`categories`/split machinery here does not need to change.
+The table therefore lives in `osv/datasets/manifests/cholecseg8k.yaml` under
+`class_mapping`, as *reviewed data* rather than code: two independent
+community encodings were cross-checked against each other mechanically
+(13/13 classes co-locate at 100% purity; the rare `ws=5` class was confirmed
+by an exhaustive scan of all 8,080 masks), and the anatomical reading was
+then signed off by the Clinical Lead. `docs/data-cards/cholecseg8k.md` §4a
+carries the full evidence *and the scope limits of that sign-off*.
+
+The guard is unchanged and deliberately not softened: `build_annotations`
+still raises `NotImplementedError` unless a mapping is passed explicitly at
+the call site. `load_approved_mapping()` supplies one only while the
+manifest says `status: APPROVED`. Provenance, not trust in this module, is
+what satisfies R-14 here.
 """
 
 from __future__ import annotations
@@ -69,7 +71,56 @@ from typing import Any, Iterator, Mapping, Sequence
 
 import cv2
 import numpy as np
+import yaml
 from PIL import Image
+
+MANIFEST_PATH = Path(__file__).resolve().parent / "manifests" / "cholecseg8k.yaml"
+
+
+def load_approved_mapping(
+    manifest_path: str | Path = MANIFEST_PATH,
+) -> tuple[dict[int, int] | None, int | None, str]:
+    """Read the class mapping out of the reviewed manifest.
+
+    R-14 is enforced by *provenance*, not by this function's cleverness: the
+    table lives in `osv/datasets/manifests/cholecseg8k.yaml`, which carries a
+    named Clinical Lead sign-off and changes only through a reviewed MR. This
+    loader refuses to hand back a mapping whose `status` is not `APPROVED`, so
+    an un-signed manifest keeps annotation generation blocked exactly as
+    before. It never invents, completes or repairs a mapping.
+
+    Returns `(mapping, ignore_value, reason)`; `mapping` is None when the
+    manifest carries no approved table, and `reason` says why.
+    """
+    path = Path(manifest_path)
+    if not path.is_file():
+        return None, None, f"manifest not found at {path}"
+
+    doc = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    block = doc.get("class_mapping")
+    if not block:
+        return None, None, "manifest has no `class_mapping` block"
+
+    status = str(block.get("status", "")).upper()
+    if status != "APPROVED":
+        return None, None, f"`class_mapping.status` is {status or 'unset'}, not APPROVED"
+
+    raw = block.get("watershed_to_category_id")
+    if not raw:
+        return None, None, "`class_mapping.watershed_to_category_id` is empty"
+
+    mapping = {int(k): int(v) for k, v in raw.items()}
+    known = {c["id"] for c in CATEGORIES}
+    unknown = sorted(set(mapping.values()) - known)
+    if unknown:
+        raise ValueError(
+            f"Manifest maps to category id(s) {unknown} that are not in the published "
+            f"13-class table. Manifest bug — stop, do not improvise."
+        )
+
+    ignore = block.get("ignore_value")
+    signer = block.get("approved_by", "unrecorded")
+    return mapping, (int(ignore) if ignore is not None else None), f"approved by {signer}"
 
 
 
@@ -385,10 +436,12 @@ def build_annotations(
 
             if pixel_to_category is not None:
                 mask_arr = _load_mask_array(zf, record.watershed_mask_path)
-                if len(mask_arr.shape) == 3 and mask_arr.shape[2] == 3:
-                    mask_2d = mask_arr[:, :, 0]
-                else:
-                    mask_2d = mask_arr
+                # The archive stores these masks with a varying channel count
+                # (grayscale, RGB and RGBA all occur). The class value lives in
+                # channel 0 in every multi-channel case; anything but a strict
+                # 2-D uint8 array makes cv2.findContours reject the input.
+                mask_2d = mask_arr[:, :, 0] if mask_arr.ndim == 3 else mask_arr
+                mask_2d = np.ascontiguousarray(mask_2d, dtype=np.uint8)
 
                 unique_vals = np.unique(mask_2d)
                 for pixel_val, cat_id in pixel_to_category.items():
@@ -561,9 +614,17 @@ def main(argv: list[str] | None = None) -> int:
     if not args.source:
         parser.error("--source is required (or set the CHOLECSEG8K_RAW_ZIP environment variable)")
 
+    mapping, ignore_value, reason = load_approved_mapping()
+    if mapping is None:
+        print(f"cholecseg8k convert: annotations BLOCKED — {reason}")
+    else:
+        print(f"cholecseg8k convert: using manifest class mapping ({len(mapping)} classes, "
+              f"ignore={ignore_value}) — {reason}")
+
     result = convert(
         args.source,
         args.out,
+        pixel_to_category=mapping,
         verify_dimensions=not args.skip_dimension_check,
     )
 
