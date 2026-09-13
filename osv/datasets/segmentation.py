@@ -110,10 +110,13 @@ class CholecSeg8kSegmentation(Dataset):
             raise ValueError(f"split {split!r} contains no images in {instances_path}")
         self.images = images
 
-        # Built lazily so the handle is created inside each DataLoader worker
-        # process rather than shared across a fork, which zipfile does not
-        # survive.
+        # Re-opened per-process in _read() (see there): being merely lazy is
+        # not enough, since anything that touches this dataset in the main
+        # process before DataLoader forks its workers (e.g.
+        # class_pixel_counts()) would still hand every worker a shared,
+        # racy file offset via the inherited fd.
         self._zip: zipfile.ZipFile | None = None
+        self._zip_pid: int | None = None
 
         self._lut = np.full(256, IGNORE_INDEX, dtype=np.uint8)
         for raw_value, class_id in self.mapping.items():
@@ -130,8 +133,22 @@ class CholecSeg8kSegmentation(Dataset):
         if self.source.is_dir():
             with Image.open(self.source / name) as im:
                 return np.array(im)
-        if self._zip is None:
+        # A ZipFile opened in the parent process before DataLoader forks its
+        # workers is inherited by every worker sharing the SAME underlying
+        # file offset (fork() duplicates the fd, not the read position).
+        # Concurrent workers then race seek()+read() on that one position,
+        # so one worker silently reads another's byte range -- surfacing as
+        # a "Bad CRC-32" on an effectively random member. Re-opening whenever
+        # the current pid doesn't match the one that opened the handle keeps
+        # every process on its own fd/offset, regardless of whether something
+        # upstream (e.g. class_pixel_counts()) touched this dataset in the
+        # main process before the workers existed.
+        pid = os.getpid()
+        if self._zip is None or self._zip_pid != pid:
+            if self._zip is not None:
+                self._zip.close()
             self._zip = zipfile.ZipFile(self.source)
+            self._zip_pid = pid
         with self._zip.open(name) as fh:
             with Image.open(io.BytesIO(fh.read())) as im:
                 return np.array(im)

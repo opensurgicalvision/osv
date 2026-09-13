@@ -45,9 +45,15 @@ def test_server_disclaimer():
     assert "RESEARCH USE ONLY — NOT FOR CLINICAL USE" in meta["disclaimer"]
 
 
-def test_deid_verification():
-    res = verify_no_phi("test_sample.dcm")
+def test_deid_verification(tmp_path):
+    from PIL import Image
+
+    sample = tmp_path / "test_sample.png"
+    Image.new("RGB", (32, 32), color=(100, 100, 100)).save(sample)
+    res = verify_no_phi(sample)
     assert res["clean"] is True
+
+
 
 
 def test_datasets_loader():

@@ -30,8 +30,22 @@ htmlcov/
 .dvc/cache/
 .dvc/tmp/
 
+# Raw surgical footage and rendered clips (R-01/R-26): never enters git
+# regardless of where it is dropped locally.
+/videos/
+*.mp4
+*.avi
+*.mov
+*.mkv
+*.webm
+
 # MLflow / experiment tracking local artifacts
 mlruns/
+
+# Training run outputs: checkpoints carry the optimizer state for R-24
+# resumption, so a single one is ~500 MB. Model artefacts belong in DVC or a
+# tracker, never in git.
+runs/
 mlartifacts/
 
 # Jupyter
@@ -48,4 +62,8 @@ Thumbs.db
 site/
 docs/text-for-presentation.txt
 docs/for-notebooklm.txt
+docs/drafts
 
+# Unreviewed demo-clip candidate frames pending human licence/OCR sign-off (R-26).
+# Only demo-assets/allowlist.yaml + explicitly approved frames should ever be tracked.
+/demo-assets/user-clips/
