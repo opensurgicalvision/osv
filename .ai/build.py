@@ -382,7 +382,7 @@ def check_no_bash_for_restricted_agents(agents: dict[str, str]) -> list[str]:
             problems.append(
                 f"R-21 violation: .ai/agents/{name}.md grants Bash, but this agent reads "
                 "untrusted PR content and must use osv-github-ro/osv-github-triage MCP tools "
-                "instead. See docs/open-source-project-plan.md Sec. 5.11."
+                "instead. See docs/adr/0001-two-stage-ci-for-agents.md."
             )
     return problems
 

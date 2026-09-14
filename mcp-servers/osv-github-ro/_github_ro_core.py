@@ -11,7 +11,7 @@ but "there is no mutating code in this file to wire up." Agents that read
 untrusted PR content (deid-gate, pr-triage) get this server and never get the
 Bash tool, so a prompt-injected diff has no shell to reach for and no
 write-shaped function to call even if it tried (see .ai/rules.md R-21 and
-docs/open-source-project-plan.md Sec. 5.11).
+docs/adr/0001-two-stage-ci-for-agents.md).
 """
 
 from __future__ import annotations

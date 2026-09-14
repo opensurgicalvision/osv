@@ -4,7 +4,7 @@
 # .ai/agents/*.md (no Bash, MCP-only GitHub access, label allowlist). Defense
 # in depth: even if every application-level guard were somehow talked around,
 # `docker run --read-only` means a write attempt hits a read-only filesystem
-# error, not a modified file. See docs/open-source-project-plan.md Sec. 5.11.
+# error, not a modified file. See docs/adr/0001-two-stage-ci-for-agents.md.
 #
 # Network is NOT restricted here -- the agent needs egress to the Anthropic
 # API and the osv-github-ro/osv-github-triage MCP servers need it for the

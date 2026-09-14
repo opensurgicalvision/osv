@@ -67,3 +67,12 @@ docs/drafts
 # Unreviewed demo-clip candidate frames pending human licence/OCR sign-off (R-26).
 # Only demo-assets/allowlist.yaml + explicitly approved frames should ever be tracked.
 /demo-assets/user-clips/
+
+# Internal planning material: team hours, budgets, sponsor-side legal assessment
+# and internal comms channels. Lives in a private repository, not this one. The
+# public design rationale belongs in docs/adr/ instead.
+/docs/open-source-project-plan.md
+/docs/presentations/
+
+# Abandoned agent worktrees. Large binaries have ended up here before.
+/.claude/worktrees/

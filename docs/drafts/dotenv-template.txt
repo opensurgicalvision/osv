@@ -118,7 +118,7 @@ ANTHROPIC_API_KEY=
 # OSV_ALLOW_PROTECTED_EDIT=
 
 # ---------------------------------------------------------------------------
-# Planned, not yet wired to any code (Phase 0/1 -- see docs/open-source-project-plan.md)
+# Planned, not yet wired to any code (early roadmap)
 # ---------------------------------------------------------------------------
 # Nothing in this repo reads these yet. Listed here so this file stays the
 # one place that tracks "what secrets will this project eventually need,"

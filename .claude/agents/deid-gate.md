@@ -18,8 +18,8 @@ out of is not a gate. So `deid-gate` is two pieces, and this file is only the se
    text, and checks 3D volumes for reconstructable faces. It writes `deid-verdict.json` and, on
    FAIL, blocks the merge itself via a required status check. **This step never asks a model
    anything and cannot be prompt-injected.**
-2. **This agent** runs afterward, only in the trusted `workflow_run` stage (Sec. 5.11 of
-   `docs/open-source-project-plan.md`), with `deid-verdict.json` as an artifact input. Its job
+2. **This agent** runs afterward, only in the trusted `workflow_run` stage
+   (`docs/adr/0001-two-stage-ci-for-agents.md`), with `deid-verdict.json` as an artifact input. Its job
    is purely to explain that verdict in plain language for a human reviewer - never to produce it.
 
 ## Trigger
@@ -55,7 +55,7 @@ tools: `osv-github-ro` for reading (structurally incapable of writing anything -
 comment it makes (whose `set_label` tool it does not even call, since it never sets labels -- see
 Hard boundaries below). No `gh` CLI, no `curl`, no shell string built from PR content that could
 be turned against it by a prompt-injected diff. See R-21 (`.ai/rules.md`) and
-`docs/open-source-project-plan.md` Sec. 5.11.
+`docs/adr/0001-two-stage-ci-for-agents.md`.
 
 ## Hard boundaries
 

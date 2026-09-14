@@ -1,7 +1,7 @@
 # Using OSV's Skills and Agents — a Team Guide
 
-This is the practical companion to `docs/open-source-project-plan.md` Sec. 5 (design) and
-`.ai/rules.md` (the rules and why they're enforced the way they are). Read this if you just want
+This is the practical companion to `.ai/rules.md` (the rules and why they're enforced the way
+they are) and `docs/adr/` (the design decisions behind them). Read this if you just want
 to know **what to actually type today**. Read the other two if you want to know why it's built
 this way.
 
@@ -64,7 +64,8 @@ seeing.
 your config too (`.cursor/rules/osv-rules.mdc`, `.github/copilot-instructions.md`,
 `.aider.conf.yml`). You get the same context and the same list of agents working in the
 background; you don't get the skills/commands/hooks, since those are Claude Code-specific
-mechanisms — see `docs/open-source-project-plan.md` Sec. 5.1 for why only some of this is portable.
+mechanisms with no equivalent in the other tools' config formats — which is why `.ai/build.py`
+can render context and agents everywhere, but not those.
 
 ---
 
@@ -102,7 +103,7 @@ verdict or the drafted artifact it produces, act on it.
 ## 4. Command reference — what you type, and when
 
 All 13 live in `.ai/commands/`. Grouped by where you'll reach for them in the project's workflow
-(see `docs/open-source-project-plan.md` Sec. 3 for the phases these map to).
+(see the roadmap in `README.md` for the phases these map to).
 
 ### Data & annotation (mostly R3, R4, R5)
 
@@ -167,7 +168,7 @@ their output (a PR comment, an issue, a report file) doesn't surprise you.
 Annotation Guideline / clinical content.** If you see an agent-authored comment asking you to
 trust its own approval, that's not how this is built — flag it, don't act on it. Full rationale
 for why three of them (`deid-gate`, `pr-triage`, `newcomer-greeter`) don't even have shell access:
-`docs/open-source-project-plan.md` Sec. 5.11.
+`docs/adr/0001-two-stage-ci-for-agents.md`.
 
 **If you're working interactively in Claude Code** and ask it to do something that matches an
 agent's job description (e.g. "review this PR the way we normally do"), Claude Code may
@@ -222,15 +223,15 @@ not "every time something related happens." If it should have run in CI, check t
 workflow under `.github/workflows/`.
 
 **I want a new command or skill**
-It needs a genuine repeat use case — the bar in this project (`docs/open-source-project-plan.md`
-Sec. 5.3/5.4) is "the task repeats ≥3 times a quarter and has a checkable result." A one-off ask
+It needs a genuine repeat use case — the bar in this project is "the task repeats ≥3 times a
+quarter and has a checkable result." A one-off ask
 doesn't need a skill; just ask Claude Code directly.
 
 ---
 
 ## 8. Where to go for more
 
-- **Why any of this is built this way:** `docs/open-source-project-plan.md` Sec. 5 (AI-first design)
+- **Why any of this is built this way:** `docs/adr/` (architecture decisions)
 - **The actual rules and their enforcement:** `.ai/rules.md`
 - **A specific skill's full protocol:** `.ai/prompts/<name>.md`
 - **A specific agent's tools, triggers, and hard boundaries:** `.ai/agents/<name>.md`

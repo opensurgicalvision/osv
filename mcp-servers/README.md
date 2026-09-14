@@ -24,7 +24,7 @@ structurally rather than by policy: `osv-github-ro` has no function that can wri
 `tests/test_github_ro_core.py`), and `osv-github-triage`'s only write tool refuses any label
 outside a fixed allowlist in code, not in a system prompt an injected diff could argue with.
 Agents that handle untrusted PR content get these two servers and never `Bash`. Full rationale:
-`docs/open-source-project-plan.md` Sec. 5.11 and `.ai/rules.md` R-21.
+`docs/adr/0001-two-stage-ci-for-agents.md` and `.ai/rules.md` R-21.
 
 ## Status
 
@@ -32,5 +32,5 @@ Only `osv-github-ro` and `osv-github-triage` have a working implementation today
 covered by `tests/test_github_ro_core.py` and `tests/test_github_triage_core.py`; the MCP
 transport wiring in each `osv_*_mcp.py` targets the `mcp` Python SDK's FastMCP API and has not
 been exercised against a live MCP client in this environment). The other six servers are speced
-in `.ai/mcp/servers.json` and referenced throughout the plan but not yet implemented -- that is
-Phase 0/1 work for R4, tracked in `docs/open-source-project-plan.md`.
+in `.ai/mcp/servers.json` but not yet implemented -- that is early-roadmap work for R4, tracked
+in the issue tracker.
