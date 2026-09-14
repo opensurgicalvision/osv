@@ -36,11 +36,11 @@ De-ID framework implemented and verified (PASS).
 - **License:** CC BY-NC-SA 4.0 (Attribution, NonCommercial, ShareAlike).
 - **Redistribution:** allowed under the above terms.
 - **Commercial use:** **not permitted.** OSV is described as "open-source,"
-  but this specific dataset's NonCommercial clause was explicitly reviewed
-  and accepted by the project owner (Aleksandr Stefanin,
-  opensurgicalvision@proton.me) in chat on 2026-08-30 as a condition of onboarding
-  this dataset — any downstream consumer of OSV that includes CholecSeg8k
-  inherits the NC restriction for that portion of the benchmark.
+  but this specific dataset's NonCommercial clause was explicitly reviewed and
+  accepted by the project owner as a condition of onboarding this dataset —
+  see `docs/adr/0002-accepting-noncommercial-datasets.md` for the decision and
+  what follows from it. Any downstream consumer of OSV that includes
+  CholecSeg8k inherits the NC restriction for that portion of the benchmark.
 - **Attribution required.** Cite:
   ```bibtex
   @misc{hong2020cholecseg8k,

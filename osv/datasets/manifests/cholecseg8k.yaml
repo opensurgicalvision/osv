@@ -4,9 +4,10 @@
 # data-butler's own download-time sha256 check is the real verification and must fail loudly
 # on any mismatch rather than trusting this value.
 #
-# Reviewed and approved by Aleksandr Stefanin (opensurgicalvision@proton.me) in chat, 2026-08-30,
-# including explicit acceptance of the CC BY-NC-SA 4.0 non-commercial clause below as the
-# license for this dataset's use in OSV.
+# Reviewed and approved by the project owner (R0) on 2026-08-30, including explicit
+# acceptance of the CC BY-NC-SA 4.0 non-commercial clause below as the license for this
+# dataset's use in OSV. That acceptance is recorded as a decision, not a preference:
+# docs/adr/0002-accepting-noncommercial-datasets.md.
 
 name: cholecseg8k
 status: APPROVED
