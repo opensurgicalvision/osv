@@ -222,8 +222,8 @@ def main(argv: list[str] | None = None, client_factory=build_client) -> int:
     parser.add_argument(
         "--emit-dotenv",
         default=None,
-        help="Write OSV_QUOTA_STATE / OSV_GPU_HOURS_REMAINING to this file for a GitLab "
-        "dotenv report, so the training job can be capped at the remaining budget.",
+        help="Write OSV_QUOTA_STATE / OSV_GPU_HOURS_REMAINING to this file (in CI, "
+        "$GITHUB_ENV), so the training job can be capped at the remaining budget.",
     )
     parser.add_argument(
         "--exit-zero-on-exhausted",

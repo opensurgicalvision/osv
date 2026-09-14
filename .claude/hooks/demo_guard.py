@@ -44,7 +44,6 @@ UNSANCTIONED_RENDERERS = {"ffmpeg", "ffmpeg.exe", "avconv", "avconv.exe"}
 PUBLISH_PATTERNS = (
     "hf upload",
     "huggingface-cli upload",
-    "glab release upload",
     "gh release upload",
     "youtube-upload",
 )
@@ -168,7 +167,7 @@ def check_bash(command: str) -> None:
         block(
             f"BLOCKED by R-26: '{published}' publishes outward.\n"
             "A demo clip leaves the project only through a human (R7/R6), taken from the\n"
-            "finished tracker artifact. Link the artifact in the MR instead."
+            "finished tracker artifact. Link the artifact in the PR instead."
         )
 
     is_sanctioned = invokes_renderer(tokens)
@@ -211,7 +210,7 @@ def check_bash(command: str) -> None:
                 block(
                     f"BLOCKED by R-01/R-26: clip output '{normalized}' is inside the repo tree.\n"
                     "Render to a path outside the repository, then attach it as a run artifact.\n"
-                    "The MR carries a markdown link, never the video."
+                    "The PR carries a markdown link, never the video."
                 )
         elif suffix == ".txt":
             check_frame_list_file(normalized, allowlist)
@@ -222,7 +221,7 @@ def check_frame(frame: str, allowlist: set[str]) -> None:
         block(
             f"BLOCKED by R-26: frame '{frame}' is not in {ALLOWLIST_FILE.as_posix()}.\n"
             "Only frames whose licence permits redistribution and which passed the\n"
-            "burned-in-text OCR scan may appear in a clip. Adding one is a human MR."
+            "burned-in-text OCR scan may appear in a clip. Adding one is a human PR."
         )
 
 
@@ -262,7 +261,7 @@ def check_write(target: str) -> None:
     if Path(lowered).suffix in VIDEO_SUFFIXES:
         block(
             f"BLOCKED by R-01/R-26: '{posix}' is a video file inside the repo tree.\n"
-            "Clips are tracker artifacts and release assets; the MR carries a link to one."
+            "Clips are tracker artifacts and release assets; the PR carries a link to one."
         )
 
 

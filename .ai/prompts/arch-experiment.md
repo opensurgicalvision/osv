@@ -18,7 +18,7 @@ else can re-run from scratch. The sandbox runs from Phase 1 on open datasets (pl
 5. **Ablation.** Any block that goes into the benchmark has a run without it, same split, same
    budget. "We changed five things and it improved" is an anecdote.
 6. **Config from the registry.** Blocks come from `osv/arch/registry.py`. Widening the search
-   space is a human MR reviewed by R1, never an improvisation inside a run.
+   space is a human PR reviewed by R1, never an improvisation inside a run.
 
 ## Output: `docs/arch-experiments/<id>.md`
 - Hypothesis in one sentence, and what result would falsify it.

@@ -14,7 +14,7 @@ Render the demo clip for run `$ARGUMENTS` using the `demo-clip` skill.
    the repo>`. The run id and `RESEARCH USE ONLY - NOT FOR CLINICAL USE` are burned in by the
    renderer unconditionally - there is no flag for it.
 4. Store as an artifact of the same run. Never write the video into the repository tree.
-5. Add a markdown link plus one line of context to `docs/arch-experiments/<id>.md` and to the MR
+5. Add a markdown link plus one line of context to `docs/arch-experiments/<id>.md` and to the PR
    description.
 
 Finish with an explicit verdict line: `DEMO: OK <artifact-link>` or

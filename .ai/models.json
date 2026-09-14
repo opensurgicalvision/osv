@@ -5,13 +5,27 @@
       "tier": "sonnet",
       "approved_by": "R1",
       "approved_date": "2026-08-29",
-      "used_by": ["deid-gate", "pr-triage", "bias-watchdog", "repro-nightly", "content-drafter"]
+      "used_by": [
+        "deid-gate",
+        "pr-triage",
+        "bias-watchdog",
+        "repro-nightly",
+        "content-drafter",
+        "data-butler",
+        "arch-runner"
+      ]
     },
     "claude-haiku-4-5-20251001": {
       "tier": "haiku",
       "approved_by": "R1",
       "approved_date": "2026-08-29",
-      "used_by": ["newcomer-greeter", "dataset-scout", "literature-digest", "cfp-scout"]
+      "used_by": [
+        "newcomer-greeter",
+        "dataset-scout",
+        "literature-digest",
+        "cfp-scout",
+        "demo-recorder"
+      ]
     }
   }
 }

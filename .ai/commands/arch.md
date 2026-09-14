@@ -11,7 +11,7 @@ Before anything else, check the weekly GPU quota. If it is spent, stop and repor
 Then, in order:
 
 1. **Config** - build it from `osv/arch/registry.py` only. A hypothesis needing an unregistered
-   block stops here and reports what MR would unblock it.
+   block stops here and reports what PR would unblock it.
 2. **Resume, do not restart** - read the parent MLflow run, take the first seed that is not
    `FINISHED`, and verify `config_hash` matches. A changed config is a new hypothesis.
 3. **Run >= 3 seeds** on the frozen patient-level split, same budget as the baseline. Validation

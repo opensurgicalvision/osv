@@ -84,7 +84,7 @@ def load_approved_mapping(
 
     R-14 is enforced by *provenance*, not by this function's cleverness: the
     table lives in `osv/datasets/manifests/cholecseg8k.yaml`, which carries a
-    named Clinical Lead sign-off and changes only through a reviewed MR. This
+    named Clinical Lead sign-off and changes only through a reviewed PR. This
     loader refuses to hand back a mapping whose `status` is not `APPROVED`, so
     an un-signed manifest keeps annotation generation blocked exactly as
     before. It never invents, completes or repairs a mapping.

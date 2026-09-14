@@ -39,7 +39,7 @@ number generator with a GPU bill.
    The remaining budget is also the run's wall-clock cap: the check is pre-flight only, so a
    single long run would otherwise overshoot the week no matter what the gate said.
 2. Builds the Hydra config from registered blocks only. A hypothesis that needs an unregistered
-   block is reported as blocked on a human MR to the registry, not improvised.
+   block is reported as blocked on a human PR to the registry, not improvised.
 3. Reads the parent MLflow run and takes the first seed whose child run is not `FINISHED`.
    Already-computed seeds are never recomputed. Before resuming it compares `config_hash`: if
    the config changed, this is a new hypothesis and previous seeds do not belong to it.
@@ -49,8 +49,8 @@ number generator with a GPU bill.
    "2 of 3 seeds, continues next cycle" into the experiment card, exits zero. This is a normal
    outcome, not a failure.
 6. On a complete series: computes mean and confidence interval across seeds, runs the required
-   ablation, writes `docs/arch-experiments/<id>.md`, and opens an MR with the config and the card.
-   A negative result gets the same card and the same MR - it is half the value of the sandbox.
+   ablation, writes `docs/arch-experiments/<id>.md`, and opens a PR with the config and the card.
+   A negative result gets the same card and the same PR - it is half the value of the sandbox.
 
 ## Hard boundaries
 
@@ -63,7 +63,7 @@ number generator with a GPU bill.
   confidence intervals** (R-25). The only verdicts are `SIGNIFICANT`, `NO EFFECT`, and
   `INCOMPLETE (n/3)`. An incomplete series cannot produce `SIGNIFICANT` no matter how good the
   first seed looked.
-- **Never widens the search space.** New blocks enter `osv/arch/registry.py` through a human MR
+- **Never widens the search space.** New blocks enter `osv/arch/registry.py` through a human PR
   reviewed by R1. An agent that invents a layer, tests it, and declares it a win is second-order
   automation bias with extra steps (risk 20).
 - **Never edits golden metrics, split definitions, or another experiment's card** to make a

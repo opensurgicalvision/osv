@@ -4,7 +4,7 @@ Not the learning - the refusals. Each test below pins one way a training script
 can quietly violate a project rule: spend GPU without passing the quota gate,
 resume a checkpoint from a different configuration and present the result as
 one curve, or widen the architecture search space through a CLI flag instead of
-a reviewed MR.
+a reviewed PR.
 """
 
 from __future__ import annotations
@@ -138,7 +138,7 @@ def test_checkpoint_carries_the_research_use_disclaimer(tmp_path):
 def test_an_unlisted_architecture_cannot_be_selected_by_flag():
     with pytest.raises(ValueError) as excinfo:
         S.build_model(13, architecture="segformer_b5", pretrained=False)
-    assert "human MR" in str(excinfo.value)
+    assert "human PR" in str(excinfo.value)
 
 
 # --- egress (R-07) ----------------------------------------------------------

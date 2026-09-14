@@ -33,7 +33,7 @@ FORBIDDEN: list[tuple[str, str, str]] = [
     (
         r"git\s+push\b.*\borigin\s+(main|master)\b",
         "R-10",
-        "Direct pushes to main are forbidden. Open an MR.",
+        "Direct pushes to main are forbidden. Open a PR.",
     ),
     (
         r"\b(printenv|env)\b(?!\s*\|)",
@@ -54,11 +54,12 @@ FORBIDDEN: list[tuple[str, str, str]] = [
 
 # R-07: egress allowlist. Anything else needs a human.
 ALLOWED_HOSTS = (
-    "git.epam.com",  # the project's actual git remote (GitLab, self-managed)
     "huggingface.co", "cdn-lfs.huggingface.co",
     "arxiv.org", "export.arxiv.org", "eutils.ncbi.nlm.nih.gov", "pubmed.ncbi.nlm.nih.gov",
     "pypi.org", "files.pythonhosted.org",
-    "github.com", "api.github.com",  # runpod/runpod-plugins-official marketplace
+    # The project's git remote and API, plus the runpod/runpod-plugins-official
+    # marketplace that the RunPod tooling fetches from.
+    "github.com", "api.github.com",
     "registry.npmjs.org",  # npx @runpod/mcp-server, npx skills add
     "mcp.getrunpod.io",  # RunPod MCP OAuth
     # Shipping training code to a GPU pod. Deliberately the proxy host and not a

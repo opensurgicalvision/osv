@@ -148,6 +148,7 @@
       "Bash(dvc push:*)",
       "Bash(git push:*)",
       "Bash(gh pr merge:*)",
+      "Bash(gh pr review:*)",
       "Bash(hf upload:*)"
     ]
   },
@@ -167,6 +168,24 @@
           {
             "type": "command",
             "command": "python .claude/hooks/bash_guard.py"
+          }
+        ],
+        "matcher": "Bash"
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python .claude/hooks/demo_guard.py"
+          }
+        ],
+        "matcher": "Write|Edit|NotebookEdit"
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python .claude/hooks/demo_guard.py"
           }
         ],
         "matcher": "Bash"

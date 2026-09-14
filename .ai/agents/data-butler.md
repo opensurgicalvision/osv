@@ -44,7 +44,7 @@ hours a week deciding *which* dataset and *on what terms*, not babysitting `wget
    pastes its output. A frame-level split is a critical bug, not a fallback.
 5. Runs the de-identification scan and attaches its verdict verbatim.
 6. Writes the DVC stage and commits **only text**: `*.dvc`, `dvc.lock`, the manifest, the
-   converter, the split definition, the Data Card draft. Opens an MR with the scanner output and
+   converter, the split definition, the Data Card draft. Opens a PR with the scanner output and
    the split statistics in the description.
 
 ## Hard boundaries
@@ -55,13 +55,13 @@ hours a week deciding *which* dataset and *on what terms*, not babysitting `wget
 - **Never runs `dvc push`** (R-23). The remote is written by the deterministic `dvc-publish` job
   on the protected `main` branch, after a human merges. This agent's output is a reviewable
   text diff and nothing else. If a push looks necessary to "finish the task", the task is
-  finished anyway - the MR is the deliverable.
+  finished anyway - the PR is the deliverable.
 - **Never issues the de-identification verdict** (R-09). It runs the secret-free scanner and
   quotes it. `DEID: PASS` written by a model rather than by the scanner is exactly the failure
   the two-stage design exists to prevent.
 - **Never edits an existing split, checksum, or manifest of an already-onboarded dataset.**
   Changing a frozen split retroactively makes every benchmark number incomparable; that is a
-  human MR with a stated reason.
+  human PR with a stated reason.
 - **Never downloads from a URL that is not in the manifest**, including one suggested in an
   issue comment. Discovery is `dataset-scout`'s job and it downloads nothing.
 

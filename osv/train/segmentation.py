@@ -199,7 +199,7 @@ def build_model(num_classes: int, *, architecture: str, pretrained: bool) -> nn.
     if architecture != "deeplabv3_resnet50":
         raise ValueError(
             f"unsupported architecture {architecture!r}. Widening the search space is a "
-            "human MR against osv/arch/registry.py (R-25), not a flag on this script."
+            "human PR against osv/arch/registry.py (R-25), not a flag on this script."
         )
     # `weights_backbone` must be silenced explicitly: torchvision defaults it to
     # IMAGENET1K_V1 regardless of `weights`, so passing weights=None alone still

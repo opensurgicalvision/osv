@@ -18,16 +18,16 @@ assembled later under a content deadline (plan Sec. 5.13, Sec. 6.2).
 ## Where frames come from
 `demo-assets/allowlist.yaml` and nowhere else: entries whose licence permits redistribution and
 which have passed the burned-in-text OCR scan. An empty allowlist renders nothing - the correct
-default, not a bug. Adding a frame is a human MR; the `demo_guard` hook refuses the rest (R-26).
+default, not a bug. Adding a frame is a human PR; the `demo_guard` hook refuses the rest (R-26).
 
 ## Where the clip goes
 | Purpose | Destination | Written by |
 |---|---|---|
 | Primary storage | Artifact of the same MLflow / W&B run | the run's own job |
-| Release copy | GitLab Release asset | deterministic release job on protected `main` |
+| Release copy | GitHub Release asset | deterministic release job on protected `main` |
 | Public showcase (HF Space, YouTube, social) | manually, from the finished artifact | R7 / R6 |
 
-Never into git: `*.mp4` under the repo tree is blocked (R-01). The MR, the issue and the
+Never into git: `*.mp4` under the repo tree is blocked (R-01). The PR, the issue and the
 experiment card carry a markdown link and one line saying what the clip shows.
 
 ## Verdicts

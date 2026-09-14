@@ -16,7 +16,7 @@ ALLOWLIST_PATH = ROOT_DIR / "demo-assets" / "allowlist.yaml"
 # closes `text=` and everything after is parsed as filter options, which is enough to
 # shrink the disclaimer to one pixel or push it off-screen -- an unremovable watermark
 # that the caller can remove. The run id comes from an agent, and agents read untrusted
-# MR content, so the charset is restricted instead of escaped.
+# PR content, so the charset is restricted instead of escaped.
 RUN_ID_PATTERN = re.compile(r"[A-Za-z0-9._-]{1,64}")
 
 

@@ -40,7 +40,7 @@ deadline.
    from there, never written into `mlruns/` inside the checkout.
 4. Stores the clip as an artifact of that same run (`mlflow.log_artifact`), and adds a markdown
    link - never an embedded video, never a binary - to `docs/arch-experiments/<id>.md` and to the
-   MR description.
+   PR description.
 5. Writes one line of context next to the link: what the clip shows and which failure it
    illustrates.
 
@@ -53,7 +53,7 @@ deadline.
 - **Never edits `demo-assets/allowlist.yaml`.** The allowlist is the trust anchor of the whole
   mechanism; frames are added by a human who checked the licence and the OCR result.
 - **The clip never enters git** (R-01, R-26). `*.mp4` under the repo tree is blocked. Video lives
-  in tracker artifacts and release assets; the MR carries a link.
+  in tracker artifacts and release assets; the PR carries a link.
 - **Never publishes outward.** Hugging Face Spaces, YouTube, social channels and conference
   slides are a human decision (R7/R6), taken from the finished artifact. `hf upload` and release
   uploads are refused from this agent's session.

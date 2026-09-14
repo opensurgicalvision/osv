@@ -106,6 +106,12 @@ def build_hook_config() -> dict:
         "PreToolUse": [
             hook_entry("Write|Edit|NotebookEdit", "phi_path_guard.py"),
             hook_entry("Bash", "bash_guard.py"),
+            # R-26: a demo clip is the shortest path from this repo to the public,
+            # so the frame allowlist, the burned-in disclaimer and the "no video in
+            # git, no publishing outward" boundaries are enforced on both the render
+            # command and any attempt to write media into the tree.
+            hook_entry("Write|Edit|NotebookEdit", "demo_guard.py"),
+            hook_entry("Bash", "demo_guard.py"),
         ],
         "PostToolUse": [
             hook_entry("Write|Edit", "python_format.py"),
@@ -141,6 +147,7 @@ def build_permissions() -> dict:
             "Bash(dvc push:*)",
             "Bash(git push:*)",
             "Bash(gh pr merge:*)",
+            "Bash(gh pr review:*)",
             "Bash(hf upload:*)",
         ],
     }
@@ -294,6 +301,32 @@ def collect_all_generated() -> dict[Path, str]:
     return all_files
 
 
+# Directories build() fully owns: every file in them is generated, so a file
+# that exists here but is no longer in all_files is a stale leftover from a
+# rename or deletion in .ai/ (this is exactly what happened once already: a
+# generated agent file was left behind after its source in .ai/agents/ was
+# renamed) and must be removed, not just never-updated-again.
+MANAGED_DIRS = (
+    ROOT_DIR / ".claude" / "agents",
+    ROOT_DIR / ".claude" / "skills",
+    ROOT_DIR / ".claude" / "commands",
+    ROOT_DIR / ".claude" / "hooks",
+)
+
+
+def prune_stale_generated(all_files: dict[Path, str]) -> list[Path]:
+    expected = set(all_files.keys())
+    removed = []
+    for directory in MANAGED_DIRS:
+        if not directory.exists():
+            continue
+        for existing in directory.glob("*"):
+            if existing.is_file() and existing not in expected:
+                existing.unlink()
+                removed.append(existing)
+    return removed
+
+
 def build() -> None:
     all_files = collect_all_generated()
     for path, content in all_files.items():
@@ -302,6 +335,9 @@ def build() -> None:
         norm_content = content.replace("\r\n", "\n")
         path.write_text(norm_content, encoding="utf-8", newline="\n")
         print(f"Generated: {path.relative_to(ROOT_DIR)}")
+    removed = prune_stale_generated(all_files)
+    for path in removed:
+        print(f"Removed (stale): {path.relative_to(ROOT_DIR)}")
     print(f"\n[OK] Successfully synchronized {len(all_files)} AI configuration files.")
 
 
@@ -372,6 +408,46 @@ def check_model_pins(agents: dict[str, str]) -> list[str]:
     return problems
 
 
+def check_all_hooks_registered() -> list[str]:
+    """A hook file that exists but is wired to no event enforces nothing.
+
+    This is the failure mode a guard has when it is added under deadline: the
+    script lands in .ai/hooks/, gets copied to .claude/hooks/, and never runs,
+    which looks identical to a working guard right up until it matters. Every
+    .ai/hooks/*.py must appear in build_hook_config()."""
+    registered = {
+        entry["hooks"][0]["command"].rsplit("/", 1)[-1]
+        for entries in build_hook_config().values()
+        for entry in entries
+    }
+    problems = []
+    for name in sorted(load_hooks()):
+        if name not in registered:
+            problems.append(
+                f"Unregistered hook: .ai/hooks/{name} is not wired to any event in "
+                "build_hook_config(). A hook that never fires is decoration."
+            )
+    return problems
+
+
+def check_demo_allowlist() -> list[str]:
+    """R-26: `demo_guard` refuses any frame that is not in demo-assets/allowlist.yaml.
+
+    If the allowlist file is missing, the guard blocks every render, which is the
+    safe direction but a confusing one to debug. Fail the check here instead, with
+    the reason stated."""
+    if not (HOOKS_DIR / "demo_guard.py").exists():
+        return []
+    allowlist = ROOT_DIR / "demo-assets" / "allowlist.yaml"
+    if not allowlist.exists():
+        return [
+            "R-26: demo_guard.py is present but demo-assets/allowlist.yaml is missing. "
+            "The allowlist is the only source of frames a demo clip may contain; without "
+            "it every render is blocked."
+        ]
+    return []
+
+
 def check() -> bool:
     all_files = collect_all_generated()
     mismatches = []
@@ -387,6 +463,8 @@ def check() -> bool:
     agents = load_agents()
     mismatches += check_no_bash_for_restricted_agents(agents)
     mismatches += check_model_pins(agents)
+    mismatches += check_all_hooks_registered()
+    mismatches += check_demo_allowlist()
 
     if mismatches:
         print("[FAIL] AI configuration checks failed:")
@@ -398,6 +476,8 @@ def check() -> bool:
     print(f"[PASS] All {len(all_files)} AI configuration files are in sync with .ai/ source.")
     print(f"[PASS] R-21 (no Bash for {', '.join(sorted(NO_BASH_AGENTS))}) holds.")
     print(f"[PASS] R-22 (model pins match {MODELS_FILE.relative_to(ROOT_DIR)}) holds.")
+    print(f"[PASS] All {len(load_hooks())} hooks in .ai/hooks/ are wired to an event.")
+    print("[PASS] R-26 (demo frame allowlist present) holds.")
     return True
 
 

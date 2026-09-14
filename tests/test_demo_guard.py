@@ -92,7 +92,7 @@ def test_raw_ffmpeg_render_is_blocked():
 
 def test_publishing_outward_is_blocked():
     assert run_hook(bash("hf upload osv/demo clip.mp4")).returncode == BLOCKED
-    assert run_hook(bash("glab release upload v0.2.0 clip.mp4")).returncode == BLOCKED
+    assert run_hook(bash("gh release upload v0.2.0 clip.mp4")).returncode == BLOCKED
 
 
 def test_render_without_run_id_is_blocked():
