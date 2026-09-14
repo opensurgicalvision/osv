@@ -76,3 +76,8 @@ docs/drafts
 
 # Abandoned agent worktrees. Large binaries have ended up here before.
 /.claude/worktrees/
+
+# Local working area. It fills up with rendered endoscopic frames -- the
+# class-mapping review packs are literally CholecSeg8k video frames -- so under
+# R-01 this must never be tracked, whatever else happens to be sitting here.
+/scratchpad/
