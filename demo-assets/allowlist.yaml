@@ -1,0 +1,29 @@
+# OSV demo frame allowlist  --  R-26
+#
+# The only frames that may appear in a rendered demo clip. A demo is made to be shown,
+# which makes it the shortest path from this repository to the public: a frame whose licence
+# forbids redistribution, or one carrying burned-in patient text, cannot be recalled once it
+# is out.
+#
+# A frame enters this file only through a human PR, and only after BOTH:
+#   1. its dataset licence explicitly permits redistribution of individual frames, and
+#   2. it has passed the burned-in-text OCR scan (`/deid`) with no detection.
+#
+# The `demo_guard` hook reads this file and refuses any frame that is not listed here.
+# An empty list therefore means nothing is renderable yet. That is the intended default,
+# not a bug to work around: the sandbox produces runs from day one, demo clips start the day
+# a human has cleared the first frames.
+#
+# Format: repository-relative or DVC-tracked paths, one per line.
+#   frames:
+#     - demo-assets/cholecseg8k/video01/frame_000123.png
+
+frames:
+
+# Reviewed-by log: every addition names who checked the licence and who ran the OCR scan.
+# reviews:
+#   - frames: demo-assets/cholecseg8k/video01/*
+#     licence_checked_by: R5
+#     ocr_scan_run: 2026-10-14
+#     dataset: cholecseg8k
+#     licence: CC BY-NC-SA 4.0, frame redistribution permitted with attribution
