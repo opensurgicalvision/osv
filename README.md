@@ -4,7 +4,7 @@
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![Data License](https://img.shields.io/badge/Data_License-CC_BY--NC--SA_4.0-lightgrey.svg)](LICENSE-DATA)
-[![CI](https://git.epam.com/aleksandr_stefanin/open-surgical-vision/badges/main/pipeline.svg)](https://git.epam.com/aleksandr_stefanin/open-surgical-vision/-/pipelines)
+[![CI](https://github.com/opensurgicalvision/osv/actions/workflows/ci.yml/badge.svg)](https://github.com/opensurgicalvision/osv/actions/workflows/ci.yml)
 [![Hugging Face](https://img.shields.io/badge/%F0%9F%A4%97-OpenSurgicalVision-yellow)](https://huggingface.co/open-surgical-vision)
 [![Docs](https://img.shields.io/badge/docs-MkDocs_Material-blue)](docs/)
 [![Python](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
@@ -75,7 +75,7 @@ open-surgical-vision/
 
 ```bash
 # Clone repository
-git clone https://git.epam.com/aleksandr_stefanin/open-surgical-vision.git
+git clone https://github.com/opensurgicalvision/osv.git
 cd open-surgical-vision
 
 # Create virtual environment and install in editable mode
@@ -146,7 +146,7 @@ every `/command`, and what each of the 9 background agents does — start there.
 
 We welcome contributions from ML engineers, clinicians, data scientists, and students!
 
-1. Check our [good first issues](https://git.epam.com/aleksandr_stefanin/open-surgical-vision/-/issues?label_name%5B%5D=good%20first%20issue).
+1. Check our [good first issues](https://github.com/opensurgicalvision/osv/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22).
 2. **Issue-First Policy:** Every Pull Request MUST be linked to an existing Issue with approved assignment. (Automated PRs without assigned issues will be closed by `pr-triage`).
 3. Read [CONTRIBUTING.md](CONTRIBUTING.md) and [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
 

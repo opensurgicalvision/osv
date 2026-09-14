@@ -34,7 +34,7 @@ source under `.ai/` matches it.
 
 ```bash
 # 1. Clone and enter the repo
-git clone https://git.epam.com/aleksandr_stefanin/open-surgical-vision.git
+git clone https://github.com/opensurgicalvision/osv.git
 cd open-surgical-vision
 
 # 2. Python environment

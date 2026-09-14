@@ -23,7 +23,7 @@ Thank you for your interest in contributing to OpenSurgicalVision (OSV)!
 
 ```bash
 # 1. Fork & clone
-git clone https://git.epam.com/aleksandr_stefanin/open-surgical-vision.git
+git clone https://github.com/opensurgicalvision/osv.git
 cd open-surgical-vision
 
 # 2. Virtual env

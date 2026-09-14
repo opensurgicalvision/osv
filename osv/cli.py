@@ -19,7 +19,7 @@ def main() -> int:
         print("=" * 60)
         print("DISCLAIMER: RESEARCH USE ONLY — NOT FOR CLINICAL USE")
         print("License: Apache-2.0 (Code), CC BY-NC-SA 4.0 (Annotations)")
-        print("Repository: https://git.epam.com/aleksandr_stefanin/open-surgical-vision")
+        print("Repository: https://github.com/opensurgicalvision/osv")
         print("=" * 60)
         return 0
 
