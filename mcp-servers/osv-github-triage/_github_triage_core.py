@@ -14,7 +14,8 @@ running MCP server, a network connection, or the `mcp`/`httpx` packages.
 
 from __future__ import annotations
 
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 GITHUB_API = "https://api.github.com"
 

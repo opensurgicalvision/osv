@@ -1,11 +1,11 @@
 """Dataset loading, conversion, patient-level splitting, and metadata management."""
 
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from osv.datasets import cholecseg8k
 
 
-def load(dataset_name: str, split: str = "train", **kwargs: Any) -> Dict[str, Any]:
+def load(dataset_name: str, split: str = "train", **kwargs: Any) -> dict[str, Any]:
     """Unified API entry point to load open surgical datasets.
 
     Args:

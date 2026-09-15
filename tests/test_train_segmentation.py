@@ -18,7 +18,6 @@ torch = pytest.importorskip("torch")
 
 from osv.train import segmentation as S  # noqa: E402
 
-
 # --- config identity (R-24) -------------------------------------------------
 
 

@@ -7,11 +7,16 @@ from pathlib import Path
 
 import cv2
 import numpy as np
-import pydicom
-from pydicom.dataset import Dataset, FileDataset, FileMetaDataset
+from pydicom.dataset import FileDataset, FileMetaDataset
 from pydicom.uid import ExplicitVRLittleEndian, generate_uid
 
-from osv.deid import inspect_3d_defacing, inspect_burned_in_text, inspect_dicom_tags, scan, verify_no_phi
+from osv.deid import (
+    inspect_3d_defacing,
+    inspect_burned_in_text,
+    inspect_dicom_tags,
+    scan,
+    verify_no_phi,
+)
 
 
 def _create_minimal_dicom(

@@ -1,9 +1,9 @@
 """Annotation pipelines, SAM 2 pre-annotation helpers, and CVAT/Label Studio connectors."""
 
-from typing import Any, Dict
+from typing import Any
 
 
-def get_preannotation_pipeline() -> Dict[str, Any]:
+def get_preannotation_pipeline() -> dict[str, Any]:
     """Returns configuration for assisted annotation with automation bias safeguards."""
     return {
         "preannotator": "SAM2",

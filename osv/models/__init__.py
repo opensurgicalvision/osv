@@ -7,10 +7,7 @@ M4: 3D Preoperative Organ/Vascular Segmentation (nnU-Net 3D / TotalSegmentator)
 M5: Surgical Desmoking & Image Restoration
 """
 
-from typing import Any, Dict
-
-
-def list_baselines() -> Dict[str, str]:
+def list_baselines() -> dict[str, str]:
     """Returns catalog of OpenSurgicalVision baseline models."""
     return {
         "M1": "2D Instrument Segmentation",

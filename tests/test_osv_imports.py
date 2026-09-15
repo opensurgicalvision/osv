@@ -1,14 +1,15 @@
 """Test package imports and core module APIs."""
 
 import numpy as np
+
 import osv
+from osv.datasets import load
+from osv.deid import verify_no_phi
+from osv.deploy import get_latency_budget
 from osv.eval import compute_dice
 from osv.eval.bias import evaluate_automation_bias
-from osv.deploy import get_latency_budget
 from osv.models import list_baselines
 from osv.serve import get_server_metadata
-from osv.deid import verify_no_phi
-from osv.datasets import load
 
 
 def test_version_and_metadata():

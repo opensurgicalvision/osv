@@ -6,13 +6,13 @@ Tracks:
 3. Systematic area shift per anatomical class
 """
 
-from typing import Any, Dict
+from typing import Any
 
 
 def evaluate_automation_bias(
     preannotated_dices: list[float],
     acceptance_rate: float,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Evaluates whether annotators are systematically biased towards AI pre-annotations."""
     mean_dice = sum(preannotated_dices) / max(len(preannotated_dices), 1)
     return {

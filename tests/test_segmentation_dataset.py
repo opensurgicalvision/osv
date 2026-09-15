@@ -22,7 +22,7 @@ import numpy as np
 import pytest
 from PIL import Image
 
-from osv.datasets.segmentation import CholecSeg8kSegmentation, IGNORE_INDEX
+from osv.datasets.segmentation import CholecSeg8kSegmentation
 
 
 def _png_bytes(fill: int, size: tuple[int, int] = (4, 4), rgb: bool = False) -> bytes:

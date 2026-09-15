@@ -183,6 +183,14 @@ def check_bash(command: str) -> None:
     if not is_sanctioned:
         return
 
+    check_sanctioned_render(command)
+
+
+def check_sanctioned_render(command: str) -> None:
+    """Validate a `python -m osv.demo` invocation once `check_bash` has confirmed it is one:
+    the run id and frame-list flags are present, the allowlist exists, and every frame or
+    output path named on the command line clears R-26. Split out of `check_bash` so each
+    function stays readable on its own rather than for any behavioral reason."""
     if "--run-id" not in command:
         block("BLOCKED by R-26: a demo clip must carry `--run-id` so it traces back to its run.")
     if "--frame-list" not in command:

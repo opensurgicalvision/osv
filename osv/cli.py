@@ -2,6 +2,7 @@
 
 import argparse
 import sys
+
 from osv import __version__
 
 

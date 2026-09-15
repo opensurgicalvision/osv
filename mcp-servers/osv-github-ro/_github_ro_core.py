@@ -16,7 +16,7 @@ docs/adr/0001-two-stage-ci-for-agents.md).
 
 from __future__ import annotations
 
-from typing import Any, Callable, Protocol
+from typing import Any, Protocol
 
 GITHUB_API = "https://api.github.com"
 

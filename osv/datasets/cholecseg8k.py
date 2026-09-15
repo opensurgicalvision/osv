@@ -65,9 +65,10 @@ import json
 import os
 import re
 import zipfile
+from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Iterator, Mapping, Sequence
+from typing import Any
 
 import cv2
 import numpy as np
@@ -290,7 +291,7 @@ def build_patient_split(
 
     total_frames = sum(video_frame_counts.values())
     targets = {split: ratio * total_frames for split, ratio in ratios.items()}
-    loaded: dict[str, int] = {split: 0 for split in ratios}
+    loaded: dict[str, int] = dict.fromkeys(ratios, 0)
 
     ordered = sorted(video_frame_counts.items(), key=lambda kv: (-kv[1], kv[0]))
 
@@ -406,6 +407,64 @@ def _load_mask_array(zf: zipfile.ZipFile | None, path: str) -> np.ndarray:
         return np.array(im)
 
 
+def _polygons_in_mask(
+    bin_mask: np.ndarray, min_area: float
+) -> list[tuple[list[float], float, list[float]]]:
+    """Contours in a binary mask, filtered to a minimum area and vertex count, as
+    (polygon, area, bbox) tuples. Shared by the pixel-indexed and RGB-indexed
+    annotation paths in `build_annotations`, which differ only in how `bin_mask`
+    is built -- everything downstream of "here is one class's binary mask" is
+    identical, and used to be two copies of this loop."""
+    polygons: list[tuple[list[float], float, list[float]]] = []
+    contours, _ = cv2.findContours(bin_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    for contour in contours:
+        area = float(cv2.contourArea(contour))
+        if area < min_area or len(contour) < 3:
+            continue
+        x, y, w, h = cv2.boundingRect(contour)
+        poly = [float(coord) for pt in contour for coord in pt[0]]
+        if len(poly) >= 6:
+            polygons.append((poly, area, [float(x), float(y), float(w), float(h)]))
+    return polygons
+
+
+def _annotations_from_pixel_mask(
+    mask_arr: np.ndarray, pixel_to_category: Mapping[int, int], min_area: float
+) -> list[tuple[list[float], float, list[float], int]]:
+    """One frame's watershed-indexed mask -> (polygon, area, bbox, category_id) tuples."""
+    # The archive stores these masks with a varying channel count (grayscale, RGB
+    # and RGBA all occur). The class value lives in channel 0 in every multi-channel
+    # case; anything but a strict 2-D uint8 array makes cv2.findContours reject the input.
+    mask_2d = mask_arr[:, :, 0] if mask_arr.ndim == 3 else mask_arr
+    mask_2d = np.ascontiguousarray(mask_2d, dtype=np.uint8)
+
+    unique_vals = np.unique(mask_2d)
+    found = []
+    for pixel_val, cat_id in pixel_to_category.items():
+        if pixel_val not in unique_vals:
+            continue
+        bin_mask = (mask_2d == pixel_val).astype(np.uint8)
+        for poly, area, bbox in _polygons_in_mask(bin_mask, min_area):
+            found.append((poly, area, bbox, cat_id))
+    return found
+
+
+def _annotations_from_color_mask(
+    mask_arr: np.ndarray,
+    color_to_category: Mapping[tuple[int, int, int], int],
+    min_area: float,
+) -> list[tuple[list[float], float, list[float], int]]:
+    """One frame's RGB-indexed mask -> (polygon, area, bbox, category_id) tuples."""
+    found = []
+    for color_tuple, cat_id in color_to_category.items():
+        bin_mask = np.all(mask_arr[:, :, :3] == color_tuple, axis=-1).astype(np.uint8)
+        if not np.any(bin_mask):
+            continue
+        for poly, area, bbox in _polygons_in_mask(bin_mask, min_area):
+            found.append((poly, area, bbox, cat_id))
+    return found
+
+
 def build_annotations(
     records: Sequence[FrameRecord],
     images: Sequence[dict[str, Any]],
@@ -434,66 +493,30 @@ def build_annotations(
         for record in sorted(records, key=lambda r: (r.video_id, r.clip_id, r.frame_id)):
             img_id = image_id_by_path[record.image_path]
 
+            # pixel_to_category takes precedence when both are supplied, matching
+            # this function's behavior before the two branches below were split out.
             if pixel_to_category is not None:
                 mask_arr = _load_mask_array(zf, record.watershed_mask_path)
-                # The archive stores these masks with a varying channel count
-                # (grayscale, RGB and RGBA all occur). The class value lives in
-                # channel 0 in every multi-channel case; anything but a strict
-                # 2-D uint8 array makes cv2.findContours reject the input.
-                mask_2d = mask_arr[:, :, 0] if mask_arr.ndim == 3 else mask_arr
-                mask_2d = np.ascontiguousarray(mask_2d, dtype=np.uint8)
-
-                unique_vals = np.unique(mask_2d)
-                for pixel_val, cat_id in pixel_to_category.items():
-                    if pixel_val not in unique_vals:
-                        continue
-                    bin_mask = (mask_2d == pixel_val).astype(np.uint8)
-                    contours, _ = cv2.findContours(bin_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-                    for contour in contours:
-                        area = float(cv2.contourArea(contour))
-                        if area < min_area or len(contour) < 3:
-                            continue
-                        x, y, w, h = cv2.boundingRect(contour)
-                        poly = [float(coord) for pt in contour for coord in pt[0]]
-                        if len(poly) >= 6:
-                            annotations.append(
-                                {
-                                    "id": ann_id,
-                                    "image_id": img_id,
-                                    "category_id": cat_id,
-                                    "segmentation": [poly],
-                                    "area": area,
-                                    "bbox": [float(x), float(y), float(w), float(h)],
-                                    "iscrowd": 0,
-                                }
-                            )
-                            ann_id += 1
+                found = _annotations_from_pixel_mask(mask_arr, pixel_to_category, min_area)
             elif color_to_category is not None:
                 mask_arr = _load_mask_array(zf, record.color_mask_path)
-                for color_tuple, cat_id in color_to_category.items():
-                    bin_mask = np.all(mask_arr[:, :, :3] == color_tuple, axis=-1).astype(np.uint8)
-                    if not np.any(bin_mask):
-                        continue
-                    contours, _ = cv2.findContours(bin_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-                    for contour in contours:
-                        area = float(cv2.contourArea(contour))
-                        if area < min_area or len(contour) < 3:
-                            continue
-                        x, y, w, h = cv2.boundingRect(contour)
-                        poly = [float(coord) for pt in contour for coord in pt[0]]
-                        if len(poly) >= 6:
-                            annotations.append(
-                                {
-                                    "id": ann_id,
-                                    "image_id": img_id,
-                                    "category_id": cat_id,
-                                    "segmentation": [poly],
-                                    "area": area,
-                                    "bbox": [float(x), float(y), float(w), float(h)],
-                                    "iscrowd": 0,
-                                }
-                            )
-                            ann_id += 1
+                found = _annotations_from_color_mask(mask_arr, color_to_category, min_area)
+            else:
+                found = []  # unreachable: the guard above requires one mapping or the other
+
+            for poly, area, bbox, cat_id in found:
+                annotations.append(
+                    {
+                        "id": ann_id,
+                        "image_id": img_id,
+                        "category_id": cat_id,
+                        "segmentation": [poly],
+                        "area": area,
+                        "bbox": bbox,
+                        "iscrowd": 0,
+                    }
+                )
+                ann_id += 1
     finally:
         if zf is not None:
             zf.close()

@@ -4,15 +4,15 @@ L1 (on-the-fly, CPU): elastic deformations, motion blur, defocus, sensor noise, 
 L2 (offline pre-generated): realistic smoke, lens blood splatter, specular highlights.
 """
 
-from typing import Any, Dict
+from typing import Any
 
 
-def get_l1_augmentations() -> Dict[str, Any]:
+def get_l1_augmentations() -> dict[str, Any]:
     """Returns albumentations pipeline for on-the-fly L1 surgical transformations."""
     return {"tier": "L1", "status": "active"}
 
 
-def get_l2_dataset_info() -> Dict[str, Any]:
+def get_l2_dataset_info() -> dict[str, Any]:
     """Returns metadata about pre-generated L2 static augmented datasets."""
     return {"tier": "L2", "variants_per_frame": 3, "invariance": "mask_preserving"}
 

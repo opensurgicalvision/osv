@@ -6,11 +6,9 @@ import io
 import json
 import re
 import zipfile
-from collections import defaultdict
 from pathlib import Path
 from typing import Any
 
-import cv2
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
@@ -46,7 +44,6 @@ WS_RE = re.compile(r"^CholecSeg8k/(video\d+)/(video\d+_\d+)/frame_(\d+)_endo_wat
 
 def scan_and_select_frames(zf: zipfile.ZipFile) -> list[dict[str, Any]]:
     """Scan all frames and select clean, stratified high-area candidates."""
-    records: list[dict[str, Any]] = []
 
     names = [n for n in zf.namelist() if WS_RE.match(n)]
     print(f"Total masks in zip: {len(names)}")
@@ -61,7 +58,7 @@ def scan_and_select_frames(zf: zipfile.ZipFile) -> list[dict[str, Any]]:
             arr = np.array(Image.open(io.BytesIO(fh.read())))
             ch0 = arr[:, :, 0] if len(arr.shape) == 3 else arr
             vals, counts = np.unique(ch0, return_counts=True)
-            cd = dict(zip(vals.tolist(), counts.tolist()))
+            cd = dict(zip(vals.tolist(), counts.tolist(), strict=False))
             frame_data.append({
                 "video": vid,
                 "clip": clip,
@@ -73,7 +70,7 @@ def scan_and_select_frames(zf: zipfile.ZipFile) -> list[dict[str, Any]]:
     # Strategy: Select representative cases with significant pixel areas
     # 1. ws=5 (Liver Ligament) - video09
     f_ws5 = max([f for f in frame_data if 5 in f["counts"] and f["video"] == "video09"], key=lambda f: f["counts"][5])
-    
+
     # 2. ws=25 (Cystic Duct) - video17
     f_cd_v17 = max([f for f in frame_data if 25 in f["counts"] and f["video"] == "video17"], key=lambda f: f["counts"][25])
 
@@ -129,7 +126,7 @@ def render_composite(
     total_px = ch0.size
 
     pixel_table: list[dict[str, Any]] = []
-    for val, cnt in sorted(zip(vals.tolist(), counts.tolist()), key=lambda x: -x[1]):
+    for val, cnt in sorted(zip(vals.tolist(), counts.tolist(), strict=False), key=lambda x: -x[1]):
         pct = (cnt / total_px) * 100.0
         if val in WS_TO_CLASS:
             cid, cinfo = WS_TO_CLASS[val]
@@ -156,7 +153,7 @@ def render_composite(
 
     # Create 3-panel image (Raw, Color Mask, Overlay)
     w, h = raw_img.size  # 854, 480
-    
+
     # Create overlay on raw
     overlay_arr = np.array(raw_img).copy()
     for row in pixel_table:
@@ -209,7 +206,7 @@ def render_composite(
     y_pos = table_top + 35
 
     draw.line([(25, y_pos - 3), (comp_w - 25, y_pos - 3)], fill=(70, 75, 80), width=1)
-    for cx, htext in zip(col_x, headers):
+    for cx, htext in zip(col_x, headers, strict=False):
         draw.text((cx, y_pos), htext, fill=(180, 185, 190), font=font_med)
     draw.line([(25, y_pos + 18), (comp_w - 25, y_pos + 18)], fill=(70, 75, 80), width=1)
 
@@ -222,7 +219,7 @@ def render_composite(
         draw.text((col_x[3], y_pos), f"RGB {row['rgb']}", fill=(200, 200, 200), font=font_med)
         draw.text((col_x[4], y_pos), f"{row['pixel_count']:,} px", fill=(100, 255, 150), font=font_med)
         draw.text((col_x[5], y_pos), f"{row['area_percent']}%", fill=(255, 255, 255), font=font_med)
-        
+
         # Draw color swatch box
         draw.rectangle([(col_x[6], y_pos + 1), (col_x[6] + 60, y_pos + 13)], fill=row["rgb"], outline=(255, 255, 255))
         y_pos += 18

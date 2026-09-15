@@ -25,8 +25,9 @@ import io
 import json
 import os
 import zipfile
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Callable, Sequence
+from typing import Any
 
 import numpy as np
 import torch

@@ -1,10 +1,11 @@
 import argparse
+import os
 import re
+import subprocess
 import sys
 import tempfile
-import subprocess
-import os
 from pathlib import Path
+
 import yaml
 
 # Hardcoded constraints for medical integrity and project rules
@@ -78,7 +79,7 @@ def load_allowlist() -> set[str]:
 
 def validate_and_resolve_frames(frame_list_file: Path, allowlist: set[str]) -> list[Path]:
     """Read a list of relative frame paths and validate every single one against the allowlist."""
-    with open(frame_list_file, "r", encoding="utf-8") as f:
+    with open(frame_list_file, encoding="utf-8") as f:
         # Read lines, strip whitespace, ignore empty lines
         lines = [line.strip() for line in f if line.strip()]
 

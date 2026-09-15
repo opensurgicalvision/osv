@@ -28,10 +28,9 @@ from __future__ import annotations
 
 import os
 
+import _github_ro_core as core
 import httpx
 from mcp.server.fastmcp import FastMCP
-
-import _github_ro_core as core
 
 GITHUB_TOKEN = os.environ["GITHUB_TOKEN"]  # supplied only by the Stage B workflow
 

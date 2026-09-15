@@ -1,9 +1,9 @@
 """Training pipelines, Hydra configurations, mixed-precision routines and MLflow tracking."""
 
-from typing import Any, Dict
+from typing import Any
 
 
-def get_default_trainer_config() -> Dict[str, Any]:
+def get_default_trainer_config() -> dict[str, Any]:
     """Returns standard reproducible trainer setup."""
     return {
         "precision": "bf16",

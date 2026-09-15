@@ -1,9 +1,6 @@
 """Edge-case benchmark suite: smoke levels, blood on lens, defocus, overexposure, and motion blur."""
 
-from typing import Any, Dict, List
-
-
-def list_robustness_perturbations() -> List[str]:
+def list_robustness_perturbations() -> list[str]:
     """Returns catalog of standard surgical stress tests."""
     return [
         "smoke_light",

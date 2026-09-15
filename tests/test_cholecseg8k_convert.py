@@ -10,12 +10,9 @@ import pytest
 
 from osv.datasets.cholecseg8k import (
     ANNOTATIONS_BLOCKED_REASON,
-    CATEGORIES,
     FrameRecord,
     build_annotations,
     build_categories,
-    build_images,
-    convert,
 )
 
 
