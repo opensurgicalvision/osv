@@ -5,7 +5,7 @@
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![Data License](https://img.shields.io/badge/Data_License-CC_BY--NC--SA_4.0-lightgrey.svg)](LICENSE-DATA)
 [![CI](https://github.com/opensurgicalvision/osv/actions/workflows/ci.yml/badge.svg)](https://github.com/opensurgicalvision/osv/actions/workflows/ci.yml)
-[![Hugging Face](https://img.shields.io/badge/%F0%9F%A4%97-OpenSurgicalVision-yellow)](https://huggingface.co/open-surgical-vision)
+[![Hugging Face](https://img.shields.io/badge/%F0%9F%A4%97-OpenSurgicalVision-yellow)](https://huggingface.co/opensurgicalvision)
 [![Docs](https://img.shields.io/badge/docs-MkDocs_Material-blue)](docs/)
 [![Python](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 
@@ -44,7 +44,7 @@
 ## 🏗️ Repository Architecture
 
 ```
-open-surgical-vision/
+osv/
 ├── .ai/                       # Canonical vendor-neutral AI prompts, context & MCP config
 ├── .claude/                   # Generated Claude assistant rules, skills & agents
 ├── .cursor/rules/             # Generated Cursor rules
@@ -76,7 +76,7 @@ open-surgical-vision/
 ```bash
 # Clone repository
 git clone https://github.com/opensurgicalvision/osv.git
-cd open-surgical-vision
+cd osv
 
 # Create virtual environment and install in editable mode
 python -m venv .venv

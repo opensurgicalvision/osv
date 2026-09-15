@@ -11,7 +11,7 @@ body:
     id: version
     attributes:
       label: OSV Version
-      description: What version of open-surgical-vision are you using?
+      description: What version of OpenSurgicalVision are you using?
       placeholder: e.g. 0.1.0 or git commit hash
     validations:
       required: true

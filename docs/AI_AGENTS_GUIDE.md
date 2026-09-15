@@ -35,7 +35,7 @@ source under `.ai/` matches it.
 ```bash
 # 1. Clone and enter the repo
 git clone https://github.com/opensurgicalvision/osv.git
-cd open-surgical-vision
+cd osv
 
 # 2. Python environment
 python -m venv .venv

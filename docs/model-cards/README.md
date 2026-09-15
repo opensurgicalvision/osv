@@ -1,6 +1,10 @@
 # Model Cards
 
-Model documentation for all baseline and released checkpoints on Hugging Face Hub:
+Model documentation for all baseline and released checkpoints, published to the
+[OpenSurgicalVision org on Hugging Face](https://huggingface.co/opensurgicalvision). The org is
+reserved; no checkpoint has been released yet, and none will be until it has a Model Card
+covering every section below plus the mandatory `RESEARCH USE ONLY — NOT FOR CLINICAL USE`
+disclaimer (R-03).
 
 Mandatory sections:
 1. **Clinical Disclaimer:** `RESEARCH USE ONLY — NOT FOR CLINICAL USE`
