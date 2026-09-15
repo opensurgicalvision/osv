@@ -10,7 +10,7 @@ readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "Apache-2.0" }
 authors = [
-    { name = "OpenSurgicalVision Contributors", email = "community@opensurgicalvision.org" }
+    { name = "OpenSurgicalVision Contributors", email = "opensurgicalvision@proton.me" }
 ]
 classifiers = [
     "Development Status :: 3 - Alpha",

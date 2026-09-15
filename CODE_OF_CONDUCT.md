@@ -11,4 +11,4 @@ Examples of behavior that contributes to a positive environment for our communit
 - Accepting responsibility and apologizing to those affected by our mistakes
 
 ## Enforcement
-Instances of abusive, harassing, or otherwise unacceptable behavior may be reported to the community leadership at `conduct@opensurgicalvision.org`.
+Instances of abusive, harassing, or otherwise unacceptable behavior may be reported to the community leadership at `opensurgicalvision@proton.me`.
