@@ -4,5 +4,5 @@ contact_links:
     url: https://github.com/opensurgicalvision/osv/discussions
     about: Ask questions, share ideas, and discuss surgical AI research.
   - name: Security & PHI Vulnerability Report
-    url: mailto:security@opensurgicalvision.org
+    url: mailto:opensurgicalvision@proton.me
     about: Privately report security issues or accidental PHI leakage.
